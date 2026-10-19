@@ -69,13 +69,13 @@ export function Nav() {
         <div className="flex items-center gap-2">
           {mode === "ALARM" && <span className="hidden rounded-full bg-danger px-2.5 py-1 font-mono text-xs font-bold text-destructive-foreground animate-pulse sm:inline">ALARM</span>}
           <div className="hidden md:block"><RoleSwitch /></div>
-          <button onClick={toggleTheme} aria-label="Toggle theme" className="grid h-9 w-9 place-items-center rounded-lg border border-border transition hover:bg-accent">
+          <button onClick={toggleTheme} aria-label="Toggle theme" className="grid h-9 w-9 place-items-center rounded-lg border border-border outline-none transition hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring">
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
           <AuthButton />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <button aria-label="Open menu" className="grid h-9 w-9 place-items-center rounded-lg border border-border xl:hidden"><Menu className="h-4 w-4" /></button>
+              <button aria-label="Open menu" className="grid h-9 w-9 place-items-center rounded-lg border border-border outline-none transition hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring xl:hidden"><Menu className="h-4 w-4" /></button>
             </SheetTrigger>
             <SheetContent side="right" className="w-72 border-border bg-background">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
