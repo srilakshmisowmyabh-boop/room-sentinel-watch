@@ -151,8 +151,8 @@ function useDemoGuard() {
   return useMemo(() => ({
     ...s, setMode, silence, testAlarm, simulateIntrusion, setPresence, toggleFault, toggleWifi,
     dismissAlert: () => setS((st) => ({ ...st, alertDismissed: true })),
-    setRole: (role) => setS((st) => ({ ...st, role })),
-    updateSettings: (p) => setS((st) => ({ ...st, settings: { ...st.settings, ...p } })),
+    setRole: (role: Role) => setS((st) => ({ ...st, role })),
+    updateSettings: (p: Partial<Settings>) => setS((st) => ({ ...st, settings: { ...st.settings, ...p } })),
     resetSettings: () => setS((st) => ({ ...st, settings: DEFAULT_SETTINGS })),
     saveSettings: async () => {},
     toggleTheme: () => setS((st) => ({ ...st, theme: st.theme === "dark" ? "light" : "dark" })),

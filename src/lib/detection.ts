@@ -29,11 +29,12 @@ export function qualifies(r: Reading, threshold: number) {
  * Returns whether presence is confirmed and when the qualifying streak began.
  */
 export function evaluatePersistence(readings: Reading[], threshold: number, persistenceSec: number) {
-  if (!readings.length || !qualifies(readings[0], threshold)) return { confirmed: false, streakStart: null as number | null };
-  let streakStart = readings[0].ts;
+  const newest = readings[0];
+  if (!newest || !qualifies(newest, threshold)) return { confirmed: false, streakStart: null as number | null };
+  let streakStart = newest.ts;
   for (const r of readings) {
     if (!qualifies(r, threshold)) break;
     streakStart = r.ts;
   }
-  return { confirmed: readings[0].ts - streakStart >= persistenceSec * 1000, streakStart };
+  return { confirmed: newest.ts - streakStart >= persistenceSec * 1000, streakStart };
 }

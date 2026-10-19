@@ -28,15 +28,15 @@ function DeviceRow({ id, name: n0, room: r0 }: { id: string; name: string; room:
   useEffect(() => { supabase.rpc("device_has_key", { _device_id: id }).then(({ data }) => setHasKey(!!data)); }, [id, newKey]);
 
   const save = async () => {
-    if (!name.trim() || !room.trim()) return toast.error("Name and room are required");
+    if (!name.trim() || !room.trim()) { toast.error("Name and room are required"); return; }
     const { data, error } = await supabase.from("devices").update({ name: name.trim().slice(0, 40), room: room.trim().slice(0, 40) }).eq("id", id).select();
-    if (error || !data?.length) return toast.error("Only the Owner can change devices.");
+    if (error || !data?.length) { toast.error("Only the Owner can change devices."); return; }
     toast.success(`${id} saved`);
   };
   const rotate = async () => {
     if (hasKey && !confirm(`Replace the API key for ${id}? The old key stops working immediately.`)) return;
     const { data, error } = await supabase.rpc("rotate_device_key", { _device_id: id });
-    if (error || !data) return toast.error("Only the Owner can manage device keys.");
+    if (error || !data) { toast.error("Only the Owner can manage device keys."); return; }
     setNewKey(data);
   };
 
