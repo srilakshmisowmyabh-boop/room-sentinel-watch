@@ -17,7 +17,9 @@ const links = [
 ] as const;
 
 const navCls = "relative rounded-full px-3 py-2 text-sm text-muted-foreground outline-none transition-all duration-200 ease-out hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
-const navActive = "!bg-primary/15 !text-primary font-semibold after:absolute after:bottom-1 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-primary";
+const navActiveBase = "!bg-primary/15 !text-primary font-semibold after:absolute after:rounded-full after:bg-primary";
+const navActive = `${navActiveBase} after:bottom-1 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2`;
+const navActiveMobile = `${navActiveBase} after:right-4 after:top-1/2 after:h-1.5 after:w-1.5 after:-translate-y-1/2`;
 
 export function Logo() {
   return (
@@ -82,8 +84,8 @@ export function Nav() {
               <div className="mt-8 flex flex-col gap-1">
                 {links.map((l) => (
                   <Link key={l.to} to={l.to} onClick={() => setOpen(false)} activeOptions={{ exact: l.to === "/" }}
-                    className={cn(navCls, "rounded-xl py-2.5 text-base after:bottom-auto after:left-auto after:right-4 after:top-1/2 after:h-1.5 after:w-1.5 after:translate-x-0 after:-translate-y-1/2")}
-                    activeProps={{ className: navActive, "aria-current": "page" }}>{l.label}</Link>
+                    className={cn(navCls, "rounded-xl py-2.5 text-base")}
+                    activeProps={{ className: navActiveMobile, "aria-current": "page" }}>{l.label}</Link>
                 ))}
                 <AuthButton mobile onClick={() => setOpen(false)} />
                 <div className="mt-4"><RoleSwitch /></div>
