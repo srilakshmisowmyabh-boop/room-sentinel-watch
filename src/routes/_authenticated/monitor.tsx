@@ -72,7 +72,7 @@ function Monitor() {
               <Metric k="Threshold" v={`${g.settings.threshold}%`} />
             </dl>
           </div>
-          <div className="glass p-5">
+          {g.demo && <div className="glass p-5">
             <div className="flex items-center justify-between"><h3 className="font-semibold">Simulate</h3><DemoBadge className="!text-[9px]" /></div>
             <div className="mt-3 flex flex-wrap gap-2">
               {presences.map((p) => (
@@ -80,7 +80,7 @@ function Monitor() {
               ))}
               <button onClick={g.toggleFault} className="rounded-lg border border-border px-2.5 py-1.5 font-mono text-[11px] hover:bg-accent">{g.sensorOk ? "Fault ESP32-3" : "Recover ESP32-3"}</button>
             </div>
-          </div>
+          </div>}
         </div>
       </div>
     </div>
