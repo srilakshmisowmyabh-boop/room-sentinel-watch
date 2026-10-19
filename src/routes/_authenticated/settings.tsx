@@ -46,8 +46,8 @@ function SettingsPage() {
               </div>
             ))}
             <div className="flex items-center justify-between gap-4 p-5">
-              <div className="flex items-start gap-3"><Send className="mt-0.5 h-5 w-5 text-cyan" /><div><div className="font-semibold">Telegram notifications</div><div className="text-sm text-muted-foreground">Send intrusion alerts to Telegram (connected in a later stage).</div></div></div>
-              <Switch checked={g.settings.telegram} onCheckedChange={(v) => g.updateSettings({ telegram: v })} aria-label="Telegram notifications" />
+              <div className="flex items-start gap-3"><Send className="mt-0.5 h-5 w-5 text-cyan" /><div><div className="font-semibold">Telegram notifications</div><div className="text-sm text-muted-foreground">Send a Telegram message when an intrusion alarm is raised. Saves immediately.</div></div></div>
+              <Switch checked={g.settings.telegram} onCheckedChange={(v) => g.setTelegram(v)} aria-label="Telegram notifications" />
             </div>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
