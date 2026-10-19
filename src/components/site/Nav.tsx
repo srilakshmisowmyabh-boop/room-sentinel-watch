@@ -82,7 +82,7 @@ export function Nav() {
               <div className="mt-8 flex flex-col gap-1">
                 {links.map((l) => (
                   <Link key={l.to} to={l.to} onClick={() => setOpen(false)} activeOptions={{ exact: l.to === "/" }}
-                    className={cn(navCls, "py-2.5 text-base")}
+                    className={cn(navCls, "rounded-xl py-2.5 text-base after:bottom-auto after:left-auto after:right-4 after:top-1/2 after:h-1.5 after:w-1.5 after:translate-x-0 after:-translate-y-1/2")}
                     activeProps={{ className: navActive, "aria-current": "page" }}>{l.label}</Link>
                 ))}
                 <AuthButton mobile onClick={() => setOpen(false)} />
