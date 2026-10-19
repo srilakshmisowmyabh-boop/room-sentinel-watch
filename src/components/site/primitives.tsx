@@ -1,3 +1,4 @@
+import { useGuard } from "@/lib/demo-store";
 import { useEffect, useRef, type ReactNode } from "react";
 import { FlaskConical, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -45,7 +46,7 @@ export function PageHeader({ eyebrow, title, desc, right }: { eyebrow: string; t
         <h1 className="mt-2 text-3xl font-semibold md:text-4xl">{title}</h1>
         {desc && <p className="mt-2 max-w-2xl text-muted-foreground">{desc}</p>}
       </div>
-      <div className="flex flex-wrap items-center gap-2">{right ?? <DemoBadge />}</div>
+      <div className="flex flex-wrap items-center gap-2">{right ?? <MaybeDemoBadge />}</div>
     </div>
   );
 }
@@ -76,4 +77,9 @@ export const presenceTone: Record<Presence, string> = {
 export function Pill({ tone, children }: { tone: string; children: ReactNode }) {
   return <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-xs font-semibold", tone)}>
     <span className="h-1.5 w-1.5 rounded-full bg-current" />{children}</span>;
+}
+
+function MaybeDemoBadge() {
+  const { demo } = useGuard();
+  return demo ? <DemoBadge /> : null;
 }
