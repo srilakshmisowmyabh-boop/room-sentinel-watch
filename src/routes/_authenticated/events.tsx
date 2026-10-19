@@ -42,11 +42,14 @@ function Events() {
 
   const exportCsv = () => {
     const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
-    const csv = ["timestamp,type,message", ...rows.map((e) => [new Date(e.ts).toISOString(), e.type, esc(e.message)].join(","))].join("\n");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const csv = ["time,device,room,event type,confidence,mode", ...rows.map((e) => [
+      new Date(e.ts).toISOString(), esc(e.device ?? ""), esc(e.room ?? ""), e.type,
+      e.confidence ?? "", esc(e.mode ?? ""),
+    ].join(","))].join("\r\n");
+    const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
-    a.href = url; a.download = `senseguard-events-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    a.href = url; a.download = `senseguard-events-${new Date().toISOString().slice(0, 10)}.csv`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
     toast.success(`Exported ${rows.length} events`);
   };
 

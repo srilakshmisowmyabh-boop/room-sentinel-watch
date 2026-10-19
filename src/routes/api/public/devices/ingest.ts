@@ -29,6 +29,19 @@ function parseTs(t: number | string | undefined): number {
   if (!Number.isFinite(n) || n < now - 7 * 864e5 || n > now + 60_000) return now;
   return n;
 }
+/** Server-only: bot token and chat ID come from secrets, never the browser. */
+async function sendTelegram(text: string): Promise<boolean> {
+  const token = process.env["TELEGRAM_BOT_TOKEN"], chatId = process.env["TELEGRAM_CHAT_ID"];
+  if (!token || !chatId) { console.error("Telegram secrets not configured"); return false; }
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text }),
+    });
+    if (!res.ok) console.error(`Telegram send failed [${res.status}]: ${await res.text()}`);
+    return res.ok;
+  } catch (e) { console.error("Telegram send error", e); return false; }
+}
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
 export const Route = createFileRoute("/api/public/devices/ingest")({
@@ -49,7 +62,7 @@ export const Route = createFileRoute("/api/public/devices/ingest")({
 
         const [{ data: device }, { data: settings }, { data: security }] = await Promise.all([
           db.from("devices").select("id, room").eq("id", p.device_id).single(),
-          db.from("settings").select("threshold, persistence").eq("id", 1).single(),
+          db.from("settings").select("threshold, persistence, telegram").eq("id", 1).single(),
           db.from("security_state").select("mode").eq("id", 1).single(),
         ]);
         if (!device || !settings || !security) return json({ error: "Not configured" }, 500);
@@ -60,7 +73,7 @@ export const Route = createFileRoute("/api/public/devices/ingest")({
         const iso = new Date(ts).toISOString();
 
         const { error: insErr } = await db.from("presence_events").insert({
-          device_id: device.id, room: device.room, state, confidence, signal_strength: p.rssi ?? null, ts: iso,
+          device_id: device.id, room: device.room, state, confidence, signal_strength: p.rssi ?? null, ts: iso, mode: security.mode,
         });
         if (insErr) return json({ error: "Could not save event" }, 500);
 
@@ -80,20 +93,24 @@ export const Route = createFileRoute("/api/public/devices/ingest")({
         );
 
         let alertCreated = false;
+        let telegramSent = false;
         if (result.confirmed && security.mode === "Armed" && result.streakStart !== null) {
           const { count } = await db.from("alerts").select("id", { count: "exact", head: true })
             .eq("device_id", device.id).eq("kind", "intrusion").eq("acknowledged", false)
             .gte("created_at", new Date(result.streakStart - 5000).toISOString());
           if (!count) {
             await db.from("alerts").insert({
-              device_id: device.id, room: device.room, kind: "intrusion", confidence,
+              device_id: device.id, room: device.room, kind: "intrusion", confidence, mode: security.mode,
               message: `Intrusion in ${device.room} while Armed (${confidence}% confidence, ${device.id})`,
             });
             alertCreated = true;
+            if (settings.telegram) {
+              telegramSent = await sendTelegram(`🚨 SENSE GUARD ALARM\nIntrusion in ${device.room} (${device.id})\nConfidence: ${confidence}%\nTime: ${new Date(ts).toISOString()}`);
+            }
           }
         }
 
-        return json({ ok: true, state, confidence, confirmed: result.confirmed, mode: security.mode, alert_created: alertCreated });
+        return json({ ok: true, state, confidence, confirmed: result.confirmed, mode: security.mode, alert_created: alertCreated, telegram_sent: telegramSent });
       },
     },
   },

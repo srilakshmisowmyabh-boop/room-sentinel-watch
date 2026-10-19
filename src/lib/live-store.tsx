@@ -113,8 +113,8 @@ export function useLiveGuard(enabled: boolean, auth: AuthState) {
   const maxUptime = Math.max(0, ...devices.map((d) => d.uptime_seconds));
 
   const guardEvents: GuardEvent[] = [
-    ...events.map((e) => ({ id: e.id, ts: Date.parse(e.ts), type: "presence" as const, message: `${e.room} (${e.device_id}): ${e.state} · ${Number(e.confidence)}%` })),
-    ...alerts.map((a) => ({ id: a.id, ts: Date.parse(a.created_at), type: (a.kind === "intrusion" ? "intrusion" : "fault") as GuardEvent["type"], message: a.message + (a.acknowledged ? " — acknowledged" : "") })),
+    ...events.map((e) => ({ id: e.id, ts: Date.parse(e.ts), type: "presence" as const, message: `${e.room} (${e.device_id}): ${e.state} · ${Number(e.confidence)}%`, device: e.device_id, room: e.room, confidence: Number(e.confidence), mode: e.mode ?? undefined })),
+    ...alerts.map((a) => ({ id: a.id, ts: Date.parse(a.created_at), type: (a.kind === "intrusion" ? "intrusion" : "fault") as GuardEvent["type"], message: a.message + (a.acknowledged ? " — acknowledged" : ""), device: a.device_id ?? undefined, room: a.room ?? undefined, confidence: a.confidence == null ? undefined : Number(a.confidence), mode: a.mode ?? undefined })),
   ].sort((a, b) => b.ts - a.ts);
 
   const fromDb: Settings = {
@@ -145,6 +145,13 @@ export function useLiveGuard(enabled: boolean, auth: AuthState) {
     toast.success("Settings saved");
     fetchers.settings(); fetchers.security_state();
   };
+  const setTelegram = async (on: boolean) => {
+    const { data, error } = await supabase.from("settings").update({ telegram: on, updated_at: new Date().toISOString() }).eq("id", 1).select();
+    if (fail("Only the Owner can change Telegram alerts.", error || !data?.length)) return;
+    toast.success(on ? "Telegram alerts on" : "Telegram alerts off");
+    if (draft) setDraft({ ...draft, telegram: on });
+    fetchers.settings();
+  };
   const noop = () => toast.info("Turn on Demo mode to run simulated scenarios.");
 
   return {
@@ -154,7 +161,7 @@ export function useLiveGuard(enabled: boolean, auth: AuthState) {
       wifi: online.length > 0, sensorOk: nodes.length > 0 && online.length === nodes.length,
       lastSeen: lastSeen || now, bootedAt: now - maxUptime * 1000,
       signal: online.length ? online.reduce((s, n) => s + n.rssi, 0) / online.length : -100,
-      setMode, silence, saveSettings,
+      setMode, silence, saveSettings, setTelegram,
       updateSettings: (p: Partial<Settings>) => setDraft({ ...settings, ...p }),
       resetSettings: () => setDraft({ threshold: 60, persistence: 3, clearTime: 20, entryDelay: 15, exitDelay: 30, alarmDuration: 120, telegram: true }),
       simulateIntrusion: noop, toggleFault: noop, toggleWifi: noop, setPresence: noop,

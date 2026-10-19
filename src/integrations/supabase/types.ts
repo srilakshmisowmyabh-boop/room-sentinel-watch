@@ -24,6 +24,7 @@ export type Database = {
           id: string
           kind: string
           message: string
+          mode: string | null
           room: string | null
         }
         Insert: {
@@ -35,6 +36,7 @@ export type Database = {
           id?: string
           kind?: string
           message: string
+          mode?: string | null
           room?: string | null
         }
         Update: {
@@ -46,6 +48,7 @@ export type Database = {
           id?: string
           kind?: string
           message?: string
+          mode?: string | null
           room?: string | null
         }
         Relationships: [
@@ -122,6 +125,7 @@ export type Database = {
           confidence: number
           device_id: string
           id: string
+          mode: string | null
           room: string
           signal_strength: number | null
           state: string
@@ -131,6 +135,7 @@ export type Database = {
           confidence: number
           device_id: string
           id?: string
+          mode?: string | null
           room: string
           signal_strength?: number | null
           state: string
@@ -140,6 +145,7 @@ export type Database = {
           confidence?: number
           device_id?: string
           id?: string
+          mode?: string | null
           room?: string
           signal_strength?: number | null
           state?: string
