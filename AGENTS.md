@@ -14,3 +14,6 @@
 - ESP32 readings arrive only via `/api/public/devices/ingest`, authenticated by per-device keys stored as SHA-256 hashes in `device_keys` (no client access). Why: devices can't hold user sessions.
 - Alert threshold/persistence rules live in `src/lib/detection.ts` (pure, unit-tested). Why: one tested source of truth.
 - `GuardProvider` switches between live Cloud data (`live-store.tsx`) and simulated data (Demo mode, per browser). Why: pages consume one `useGuard()` interface.
+- Account creation uses a public validated server function plus a locked auth lifecycle trigger and permanent bootstrap flag; public Auth signup is disabled. Why: invitations cannot be bypassed and single-use consumption is atomic.
+- Viewer revocation sets membership revoked_at before banning the Auth account; all membership policies exclude revoked rows. Why: existing tokens immediately lose database access and future sign-ins are blocked.
+- Owner Viewer management uses authenticated server functions and owner-scoped database RPCs. Why: private emails and sign-in timestamps never appear in public queries.
