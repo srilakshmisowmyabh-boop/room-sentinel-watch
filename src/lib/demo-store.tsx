@@ -12,7 +12,7 @@ export type Presence = "NO_PERSON" | "POSSIBLE_PERSON" | "PERSON_PRESENT" | "INT
 export type Role = "owner" | "viewer";
 export type EventType = "mode" | "presence" | "intrusion" | "fault" | "wifi" | "test";
 
-export interface GuardEvent { id: string; ts: number; type: EventType; message: string; device?: string; room?: string; confidence?: number; mode?: string; }
+export interface GuardEvent { id: string; ts: number; type: EventType; message: string; device?: string | undefined; room?: string | undefined; confidence?: number | undefined; mode?: string | undefined; }
 export interface NodeInfo { id: string; label: string; rssi: number; online: boolean; }
 export interface Settings {
   threshold: number; persistence: number; clearTime: number; entryDelay: number;
