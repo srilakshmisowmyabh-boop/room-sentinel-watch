@@ -38,13 +38,13 @@ function Dashboard() {
         <div role="alert" className="mb-6 flex flex-col gap-3 rounded-2xl border border-danger/60 bg-danger/15 p-4 glow-danger sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="relative grid h-10 w-10 shrink-0 place-items-center"><SignalRings tone="danger" /><AlertTriangle className="h-5 w-5 text-danger" /></span>
-            <div><div className="font-display font-bold text-danger">INTRUSION DETECTED</div><div className="text-sm text-muted-foreground">Presence confirmed in Living Room while system was armed. (simulated)</div></div>
+            <div><div className="font-display font-bold text-danger">INTRUSION DETECTED</div><div className="text-sm text-muted-foreground">Presence confirmed in Living Room while system was armed.{g.demo ? " (simulated)" : ""}</div></div>
           </div>
           {g.isOwner && <button onClick={g.silence} className="inline-flex items-center justify-center gap-2 rounded-xl bg-danger px-4 py-2.5 font-semibold text-destructive-foreground hover:opacity-90"><BellOff className="h-4 w-4" />Silence / Reset</button>}
         </div>
       )}
 
-      <PageHeader eyebrow="Dashboard" title="Security overview" desc={`Signed in as ${g.isOwner ? "Owner" : "Viewer"} (demo role).`} />
+      <PageHeader eyebrow="Dashboard" title="Security overview" desc={`Signed in as ${g.displayName ?? g.email ?? ""} · ${g.isOwner ? "Owner" : "Viewer"}${g.demo ? " · Demo mode (simulated data)" : ""}`} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={Shield} label="Security mode" value={<Pill tone={modeTone[g.mode]}>{g.mode}</Pill>} accent={g.mode === "ALARM"} />
@@ -54,7 +54,7 @@ function Dashboard() {
         <StatCard icon={Clock} label="Last seen" value={<span className="font-mono text-lg font-semibold">{Math.max(0, Math.round((now - g.lastSeen) / 1000))}s ago</span>} />
         <StatCard icon={Timer} label="Uptime" value={<span className="font-mono text-lg font-semibold">{formatDuration(now - g.bootedAt)}</span>} />
         <StatCard icon={Signal} label="Signal strength" value={<span className="font-mono text-lg font-semibold">{g.signal.toFixed(0)} dBm</span>} />
-        <StatCard icon={Zap} label="Nodes online" value={<span className="font-mono text-lg font-semibold">{g.nodes.filter((n) => n.online).length} / 3</span>} />
+        <StatCard icon={Zap} label="Nodes online" value={<span className="font-mono text-lg font-semibold">{g.nodes.filter((n) => n.online).length} / {g.nodes.length}</span>} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
@@ -77,7 +77,7 @@ function Dashboard() {
               </button>
             </div>
           </div>
-          <div className="glass p-5">
+          {g.demo && <div className="glass p-5">
             <div className="flex items-center justify-between"><h2 className="font-semibold">Demo scenarios</h2><DemoBadge className="!text-[9px]" /></div>
             <div className="mt-3 flex flex-wrap gap-2">
               <DemoBtn onClick={g.simulateIntrusion}>Simulate intrusion</DemoBtn>
@@ -85,7 +85,7 @@ function Dashboard() {
               <DemoBtn onClick={g.toggleFault}>{g.sensorOk ? "Sensor fault" : "Clear fault"}</DemoBtn>
               <DemoBtn onClick={() => g.setPresence("NO_PERSON")}>Clear room</DemoBtn>
             </div>
-          </div>
+          </div>}
           <AlertPanel />
         </div>
       </div>

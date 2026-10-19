@@ -53,8 +53,8 @@ function Events() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
       <PageHeader eyebrow="Events" title="Event history" desc="Every security-relevant change, timestamped."
-        right={<><DemoBadge />{g.isOwner && <button onClick={exportCsv} disabled={!rows.length} className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-primary-foreground glow disabled:opacity-40"><Download className="h-4 w-4" />Export CSV</button>}</>} />
-      {!g.isOwner ? <Locked what="access protected event history" /> : (
+        right={<>{g.demo && <DemoBadge />}{g.isOwner && <button onClick={exportCsv} disabled={!rows.length} className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-primary-foreground glow disabled:opacity-40"><Download className="h-4 w-4" />Export CSV</button>}</>} />
+      {(
         <div className="glass overflow-hidden">
           <div className="flex flex-col gap-4 border-b border-border p-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap gap-1.5">

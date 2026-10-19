@@ -55,7 +55,7 @@ export function Locked({ what }: { what: string }) {
     <div className="glass flex flex-col items-center gap-3 p-10 text-center">
       <div className="grid h-12 w-12 place-items-center rounded-full bg-muted"><Lock className="h-5 w-5 text-muted-foreground" /></div>
       <h3 className="text-lg font-semibold">Owner access required</h3>
-      <p className="max-w-md text-sm text-muted-foreground">Viewer accounts can't {what}. Switch to the Owner demo role in the top bar to continue.</p>
+      <p className="max-w-md text-sm text-muted-foreground">Viewer accounts can't {what}. Ask the Owner of this system if you need changes.</p>
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
 import { Route as AuthenticatedMonitorRouteImport } from './routes/_authenticated/monitor'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as ApiPublicDevicesIngestRouteImport } from './routes/api/public/devices/ingest'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -63,6 +64,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicDevicesIngestRoute = ApiPublicDevicesIngestRouteImport.update({
+  id: '/api/public/devices/ingest',
+  path: '/api/public/devices/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/events': typeof AuthenticatedEventsRoute
   '/monitor': typeof AuthenticatedMonitorRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/devices/ingest': typeof ApiPublicDevicesIngestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/events': typeof AuthenticatedEventsRoute
   '/monitor': typeof AuthenticatedMonitorRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/devices/ingest': typeof ApiPublicDevicesIngestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/_authenticated/events': typeof AuthenticatedEventsRoute
   '/_authenticated/monitor': typeof AuthenticatedMonitorRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/devices/ingest': typeof ApiPublicDevicesIngestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/monitor'
     | '/settings'
+    | '/api/public/devices/ingest'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/monitor'
     | '/settings'
+    | '/api/public/devices/ingest'
   id:
     | '__root__'
     | '/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/_authenticated/events'
     | '/_authenticated/monitor'
     | '/_authenticated/settings'
+    | '/api/public/devices/ingest'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -136,6 +148,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   HowItWorksRoute: typeof HowItWorksRoute
   LoginRoute: typeof LoginRoute
+  ApiPublicDevicesIngestRoute: typeof ApiPublicDevicesIngestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -203,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/devices/ingest': {
+      id: '/api/public/devices/ingest'
+      path: '/api/public/devices/ingest'
+      fullPath: '/api/public/devices/ingest'
+      preLoaderRoute: typeof ApiPublicDevicesIngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -229,6 +249,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   HowItWorksRoute: HowItWorksRoute,
   LoginRoute: LoginRoute,
+  ApiPublicDevicesIngestRoute: ApiPublicDevicesIngestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -5,6 +5,7 @@
  * consume the `useGuard()` interface below.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useLiveGuard, useAuthState, type AuthState, type LiveExtras } from "./live-store";
 
 export type SecurityMode = "DISARMED" | "HOME" | "ARMED" | "ALARM";
 export type Presence = "NO_PERSON" | "POSSIBLE_PERSON" | "PERSON_PRESENT" | "INTRUSION";
@@ -50,7 +51,7 @@ interface GuardState {
   buzzing: boolean; theme: "dark" | "light";
 }
 
-interface GuardApi extends GuardState {
+export interface GuardApi extends GuardState, LiveExtras {
   setMode: (m: SecurityMode) => void;
   silence: () => void;
   testAlarm: () => void;
@@ -61,6 +62,7 @@ interface GuardApi extends GuardState {
   dismissAlert: () => void;
   setRole: (r: Role) => void;
   updateSettings: (s: Partial<Settings>) => void;
+  saveSettings: () => Promise<void>;
   resetSettings: () => void;
   toggleTheme: () => void;
   isOwner: boolean;
@@ -68,7 +70,7 @@ interface GuardApi extends GuardState {
 
 const Ctx = createContext<GuardApi | null>(null);
 
-export function GuardProvider({ children }: { children: ReactNode }) {
+function useDemoGuard() {
   const [s, setS] = useState<GuardState>(() => ({
     mode: "HOME", presence: "PERSON_PRESENT", wifi: true, sensorOk: true,
     lastSeen: Date.now(), bootedAt: Date.now() - 1000 * 60 * 60 * 26.4, signal: -54,
@@ -146,16 +148,40 @@ export function GuardProvider({ children }: { children: ReactNode }) {
   const toggleWifi = useCallback(() => setS((st) =>
     log("wifi", st.wifi ? "Wi-Fi disconnected — simulated" : "Wi-Fi reconnected")({ ...st, wifi: !st.wifi })), []);
 
-  const api: GuardApi = useMemo(() => ({
+  return useMemo(() => ({
     ...s, setMode, silence, testAlarm, simulateIntrusion, setPresence, toggleFault, toggleWifi,
     dismissAlert: () => setS((st) => ({ ...st, alertDismissed: true })),
     setRole: (role) => setS((st) => ({ ...st, role })),
     updateSettings: (p) => setS((st) => ({ ...st, settings: { ...st.settings, ...p } })),
     resetSettings: () => setS((st) => ({ ...st, settings: DEFAULT_SETTINGS })),
+    saveSettings: async () => {},
     toggleTheme: () => setS((st) => ({ ...st, theme: st.theme === "dark" ? "light" : "dark" })),
-    isOwner: s.role === "owner",
   }), [s, setMode, silence, testAlarm, simulateIntrusion, setPresence, toggleFault, toggleWifi]);
+}
 
+const DEMO_KEY = "senseguard-demo-mode";
+
+export function GuardProvider({ children }: { children: ReactNode }) {
+  const auth: AuthState = useAuthState();
+  const [demo, setDemoState] = useState(false);
+  useEffect(() => { setDemoState(localStorage.getItem(DEMO_KEY) === "1"); }, []);
+  const setDemo = useCallback((v: boolean) => { localStorage.setItem(DEMO_KEY, v ? "1" : "0"); setDemoState(v); }, []);
+
+  const demoApi = useDemoGuard();
+  const live = useLiveGuard(!demo && auth.signedIn, auth);
+  const base = demo || !auth.signedIn ? demoApi : { ...demoApi, ...live.state };
+  const role: Role = auth.authRole ?? "viewer";
+
+  const api: GuardApi = {
+    ...base,
+    ...auth,
+    role,
+    // Roles come from the database; the UI only mirrors them. RLS enforces them.
+    isOwner: auth.signedIn && auth.authRole === "owner",
+    setRole: () => {},
+    demo, setDemo,
+    devices: live.devices,
+  };
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }
 
