@@ -91,7 +91,7 @@ export function useLiveGuard(enabled: boolean, auth: AuthState) {
   }, [enabled, auth.userId, fetchers]);
 
   const nodes: NodeInfo[] = devices.map((d) => ({
-    id: d.id, label: `${d.name} · ${d.room}`, rssi: d.signal_strength ?? -100,
+    id: d.id, label: d.name, rssi: d.signal_strength ?? -100,
     online: d.status === "online" && !!d.last_seen && now - Date.parse(d.last_seen) < ONLINE_MS,
   }));
   const openIntrusion = alerts.some((a) => a.kind === "intrusion" && !a.acknowledged);
@@ -113,7 +113,7 @@ export function useLiveGuard(enabled: boolean, auth: AuthState) {
   const maxUptime = Math.max(0, ...devices.map((d) => d.uptime_seconds));
 
   const guardEvents: GuardEvent[] = [
-    ...events.map((e) => ({ id: e.id, ts: Date.parse(e.ts), type: "presence" as const, message: `${e.room} (${e.device_id}): ${e.state} · ${Number(e.confidence)}%`, device: e.device_id, room: e.room, confidence: Number(e.confidence), mode: e.mode ?? undefined })),
+    ...events.map((e) => ({ id: e.id, ts: Date.parse(e.ts), type: "presence" as const, message: `${e.room} · ${devices.find((d) => d.id === e.device_id)?.name ?? e.device_id}: ${e.state} · ${Number(e.confidence)}%`, device: e.device_id, room: e.room, confidence: Number(e.confidence), mode: e.mode ?? undefined })),
     ...alerts.map((a) => ({ id: a.id, ts: Date.parse(a.created_at), type: (a.kind === "intrusion" ? "intrusion" : "fault") as GuardEvent["type"], message: a.message + (a.acknowledged ? " — acknowledged" : ""), device: a.device_id ?? undefined, room: a.room ?? undefined, confidence: a.confidence == null ? undefined : Number(a.confidence), mode: a.mode ?? undefined })),
   ].sort((a, b) => b.ts - a.ts);
 
