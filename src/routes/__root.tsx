@@ -127,7 +127,7 @@ function RootComponent() {
       <GuardProvider>
         <div className="relative min-h-screen overflow-x-hidden">
           <Nav />
-          <main>
+          <main className="pt-16">
             <Outlet />
           </main>
           <Footer />
