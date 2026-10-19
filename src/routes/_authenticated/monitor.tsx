@@ -66,7 +66,7 @@ function Monitor() {
           <div className="glass p-5">
             <h3 className="flex items-center gap-2 font-semibold"><Wifi className="h-4 w-4 text-cyan" /> Signal metrics</h3>
             <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-              <Metric k="Avg RSSI" v={`${(g.nodes.reduce((a, n) => a + n.rssi, 0) / 3).toFixed(1)} dBm`} />
+              <Metric k="Avg RSSI" v={`${(g.nodes.reduce((a, n) => a + n.rssi, 0) / Math.max(1, g.nodes.length)).toFixed(1)} dBm`} />
               <Metric k="Links" v={`${g.nodes.filter((n) => n.online).length * 2}/6`} />
               <Metric k="Frame rate" v={g.wifi ? "50 Hz" : "—"} />
               <Metric k="Threshold" v={`${g.settings.threshold}%`} />

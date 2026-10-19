@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Download, Inbox } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Locked, PageHeader, DemoBadge } from "@/components/site/primitives";
+import { PageHeader, DemoBadge } from "@/components/site/primitives";
 import { formatTime, useGuard, type EventType } from "@/lib/demo-store";
 import { cn } from "@/lib/utils";
 
