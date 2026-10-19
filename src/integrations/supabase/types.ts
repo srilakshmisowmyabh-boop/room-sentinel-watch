@@ -236,21 +236,72 @@ export type Database = {
         }
         Relationships: []
       }
+      signup_state: {
+        Row: {
+          id: number
+          owner_claimed: boolean
+        }
+        Insert: {
+          id?: number
+          owner_claimed?: boolean
+        }
+        Update: {
+          id?: number
+          owner_claimed?: boolean
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
+          revoked_at: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           id?: string
+          revoked_at?: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           id?: string
+          revoked_at?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      viewer_invites: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          key_hash: string
+          name: string
+          revoked_at: string | null
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          key_hash: string
+          name: string
+          revoked_at?: string | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          key_hash?: string
+          name?: string
+          revoked_at?: string | null
+          used_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -268,6 +319,20 @@ export type Database = {
         Returns: boolean
       }
       is_member: { Args: { _user_id: string }; Returns: boolean }
+      list_viewers: {
+        Args: never
+        Returns: {
+          account_created_at: string
+          email: string
+          id: string
+          last_sign_in_at: string
+          name: string
+          passkey_status: string
+          revoked_at: string
+          user_id: string
+        }[]
+      }
+      revoke_viewer: { Args: { _id: string }; Returns: string }
       rotate_device_key: { Args: { _device_id: string }; Returns: string }
     }
     Enums: {
