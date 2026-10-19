@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/monitor")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Live Monitor — SENSE GUARD" },
       { name: "description", content: "Interactive room sensing view with three ESP32 nodes and presence heatmap." },
       { property: "og:title", content: "Live Monitor — SENSE GUARD" },

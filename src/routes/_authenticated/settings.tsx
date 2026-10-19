@@ -6,10 +6,13 @@ import { Switch } from "@/components/ui/switch";
 import { Locked, PageHeader } from "@/components/site/primitives";
 import { useGuard, type Settings } from "@/lib/demo-store";
 import { DevicesPanel } from "@/components/site/DevicesPanel";
+import { ViewersPanel } from "@/components/site/ViewersPanel";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Settings — SENSE GUARD" },
       { name: "description", content: "Configure detection threshold, persistence, delays, alarm duration and Telegram alerts." },
       { property: "og:title", content: "Settings — SENSE GUARD" },
@@ -55,6 +58,7 @@ function SettingsPage() {
             <button onClick={() => g.demo ? toast.success("Settings saved for this demo session") : g.saveSettings()} className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-primary-foreground glow">Save settings</button>
           </div>
           {!g.demo && <DevicesPanel />}
+          {g.authRole === "owner" && <ViewersPanel />}
         </div>
       )}
     </div>

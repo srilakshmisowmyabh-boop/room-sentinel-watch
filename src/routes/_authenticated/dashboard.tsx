@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Security Dashboard — SENSE GUARD" },
       { name: "description", content: "Control security modes, view presence state, Wi-Fi and sensor health." },
       { property: "og:title", content: "Security Dashboard — SENSE GUARD" },

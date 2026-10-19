@@ -6,10 +6,15 @@ import { SignalRings } from "@/components/site/primitives";
 import { supabase } from "@/integrations/supabase/client";
 import { useGuard } from "@/lib/demo-store";
 import { cn } from "@/lib/utils";
+import { useServerFn } from "@tanstack/react-start";
+import { registerAccount, signupAvailability } from "@/lib/viewers.functions";
+import { signupSchema } from "@/lib/viewer-schemas";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Login — SENSE GUARD" },
       { name: "description", content: "Sign in to SENSE GUARD or create an account." },
       { property: "og:title", content: "Login — SENSE GUARD" },
@@ -27,6 +32,10 @@ function Login() {
   const [busy, setBusy] = useState(false);
   const g = useGuard();
   const nav = useNavigate();
+  const register = useServerFn(registerAccount);
+  const availability = useServerFn(signupAvailability);
+  const [firstOwner, setFirstOwner] = useState(false);
+  useEffect(() => { availability().then(result => setFirstOwner(result.firstOwner)).catch(() => setFirstOwner(false)); }, [availability]);
 
   useEffect(() => { if (g.authReady && g.signedIn) nav({ to: "/dashboard" }); }, [g.authReady, g.signedIn, nav]);
 
@@ -46,18 +55,16 @@ function Login() {
   const onSignup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    const name = String(f.get("name") ?? "").trim(), email = String(f.get("email") ?? "").trim(), password = String(f.get("pass") ?? "");
-    if (!name || !email || !password) { setErr("All fields are required."); return; }
-    if (name.length > 60) { setErr("Display name must be 60 characters or fewer."); return; }
-    if (password.length < 8) { setErr("Password must be at least 8 characters."); return; }
+    const parsed = signupSchema.safeParse({ name: String(f.get("name") ?? ""), email: String(f.get("email") ?? ""), password: String(f.get("pass") ?? ""), passkey: String(f.get("passkey") ?? "") });
+    if (!parsed.success) { setErr(parsed.error.issues[0]?.message ?? "Please check your details."); return; }
+    if (!firstOwner && !parsed.data.passkey) { setErr("Enter the passkey shared by the Owner."); return; }
     setErr(""); setBusy(true);
-    const { data, error } = await supabase.auth.signUp({
-      email, password, options: { data: { display_name: name }, emailRedirectTo: window.location.origin },
-    });
-    setBusy(false);
-    if (error) { setErr(error.message); return; }
-    if (data.session) { toast.success("Account created"); nav({ to: "/dashboard" }); }
-    else { toast.info("Account created — please sign in."); setTab("login"); }
+    try {
+      const result = await register({ data: parsed.data });
+      if (!result.ok) { setErr(result.message); return; }
+      setFirstOwner(false); toast.success(result.message); setTab("login");
+    } catch { setErr("Unable to create account. Please try again."); }
+    finally { setBusy(false); }
   };
 
   return (
@@ -68,7 +75,7 @@ function Login() {
           <span className="grid h-24 w-24 place-items-center rounded-3xl bg-brand glow"><ShieldCheck className="h-12 w-12 text-primary-foreground" /></span>
         </div>
         <h2 className="mt-10 text-center text-3xl font-semibold">Welcome to <span className="text-gradient">SENSE GUARD</span></h2>
-        <p className="mt-3 text-center text-muted-foreground">The first account becomes the Owner. Everyone after joins as a Viewer.</p>
+        <p className="mt-3 text-center text-muted-foreground">{firstOwner ? "The first account becomes the Owner. No passkey needed." : "Viewer accounts require a passkey shared by the Owner."}</p>
       </div>
       <div className="glass p-6 md:p-8">
         <div className="mb-6 flex rounded-xl border border-border bg-muted/50 p-1">
@@ -85,9 +92,10 @@ function Login() {
           </form>
         ) : (
           <form onSubmit={onSignup} className="space-y-4">
-            <label className="block space-y-1.5 text-sm"><span>Display name</span><input name="name" className={input} autoComplete="name" maxLength={60} /></label>
+            <label className="block space-y-1.5 text-sm"><span>Name</span><input name="name" className={input} autoComplete="name" maxLength={60} required /></label>
             <label className="block space-y-1.5 text-sm"><span>Email</span><input name="email" type="email" className={input} autoComplete="email" /></label>
             <label className="block space-y-1.5 text-sm"><span>Password (8+ characters)</span><input name="pass" type="password" className={input} autoComplete="new-password" /></label>
+            <label className="block space-y-1.5 text-sm"><span>Passkey{firstOwner ? " (not needed for the first Owner)" : ""}</span><input name="passkey" className={input} autoComplete="off" maxLength={128} required={!firstOwner} /></label>
             {err && <p className="text-sm text-danger">{err}</p>}
             <button disabled={busy} className="w-full rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow disabled:opacity-60">{busy ? "Creating…" : "Create account"}</button>
           </form>

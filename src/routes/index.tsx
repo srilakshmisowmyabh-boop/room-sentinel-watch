@@ -7,6 +7,8 @@ import { DemoBadge, Reveal, SignalRings } from "@/components/site/primitives";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "SENSE GUARD — See Without Seeing" },
       { name: "description", content: "Camera-free, privacy-first human presence sensing for smart home security using RUView and ESP32." },
       { property: "og:title", content: "SENSE GUARD — See Without Seeing" },

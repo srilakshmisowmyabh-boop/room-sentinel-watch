@@ -35,10 +35,15 @@ export function useAuthState(): AuthState {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSt({ authReady: true, signedIn: false, userId: null, email: null, displayName: null, authRole: null }); return; }
     const [{ data: roles }, { data: prof }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", user.id),
+      supabase.from("user_roles").select("role").eq("user_id", user.id).is("revoked_at", null),
       supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
     ]);
     const authRole: Role | null = roles?.some((r) => r.role === "owner") ? "owner" : roles?.length ? "viewer" : null;
+    if (!authRole) {
+      await supabase.auth.signOut({ scope: "local" });
+      setSt({ authReady: true, signedIn: false, userId: null, email: null, displayName: null, authRole: null });
+      return;
+    }
     setSt({ authReady: true, signedIn: true, userId: user.id, email: user.email ?? null, displayName: prof?.display_name ?? null, authRole });
   }, []);
 
@@ -48,7 +53,9 @@ export function useAuthState(): AuthState {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       setTimeout(() => { load(); router.invalidate(); }, 0);
     });
-    return () => data.subscription.unsubscribe();
+    const interval = setInterval(() => { load(); }, 15000);
+    const channel = supabase.channel("senseguard-membership").on("postgres_changes", { event: "UPDATE", schema: "public", table: "user_roles" }, () => { load(); router.invalidate(); }).subscribe();
+    return () => { data.subscription.unsubscribe(); clearInterval(interval); supabase.removeChannel(channel); };
   }, [load, router]);
 
   const signOut = useCallback(async () => {
@@ -80,7 +87,7 @@ export function useLiveGuard(enabled: boolean, auth: AuthState) {
   }), []);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) { setDevices([]); setEvents([]); setAlerts([]); setSecurity(null); setSettingsRow(null); setDraft(null); return; }
     Object.values(fetchers).forEach((f) => f());
     const ch = supabase.channel("senseguard-live");
     (Object.keys(fetchers) as (keyof typeof fetchers)[]).forEach((t) =>

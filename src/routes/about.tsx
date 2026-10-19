@@ -5,6 +5,8 @@ import { PageHeader, Reveal } from "@/components/site/primitives";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "About — SENSE GUARD" },
       { name: "description", content: "SENSE GUARD is a college engineering project on camera-free smart home security using RUView." },
       { property: "og:title", content: "About — SENSE GUARD" },
