@@ -3,10 +3,11 @@ import { useGuard } from "@/lib/demo-store";
 import { cn } from "@/lib/utils";
 
 // Node positions in a 600x400 room coordinate space
+// Labels sit inside the room, away from the edges, so they are never clipped.
 const NODE_POS = [
-  { x: 60, y: 60 },
-  { x: 540, y: 60 },
-  { x: 300, y: 360 },
+  { x: 90, y: 90, corner: "Corner A", anchor: "start" as const, dx: -14 },
+  { x: 510, y: 90, corner: "Corner B", anchor: "end" as const, dx: 14 },
+  { x: 300, y: 330, corner: "Corner C", anchor: "middle" as const, dx: 0 },
 ];
 
 export function RoomView({ view = "room", compact = false }: { view?: "room" | "sensing"; compact?: boolean }) {
@@ -98,9 +99,10 @@ export function RoomView({ view = "room", compact = false }: { view?: "room" | "
                 <animate attributeName="fill-opacity" values="0.35;0;0.35" dur="2.6s" repeatCount="indefinite" begin={`${i * 0.5}s`} />
               </circle>
               <circle cx={p.x} cy={p.y} r="11" fill="var(--card)" stroke={ok ? "var(--cyan)" : "var(--danger)"} strokeWidth="3" />
-              <text x={p.x} y={p.y + (p.y > 200 ? -22 : 34)} textAnchor="middle" fontSize="13" fontWeight="600" fill="var(--foreground)" fontFamily="JetBrains Mono">{n.label}</text>
+              <text x={p.x + p.dx} y={p.y + (p.y > 200 ? -40 : 34)} textAnchor={p.anchor} fontSize="13" fontWeight="600" fill="var(--foreground)" fontFamily="JetBrains Mono">{n.label}</text>
+              <text x={p.x + p.dx} y={p.y + (p.y > 200 ? -26 : 48)} textAnchor={p.anchor} fontSize="11" fill="var(--muted-foreground)" fontFamily="JetBrains Mono">{p.corner}</text>
               {(hover === n.id || !compact) && (
-                <text x={p.x} y={p.y + (p.y > 200 ? -38 : 50)} textAnchor="middle" fontSize="11" fill={ok ? "var(--muted-foreground)" : "var(--danger)"} fontFamily="JetBrains Mono">
+                <text x={p.x + p.dx} y={p.y + (p.y > 200 ? 32 : 62)} textAnchor={p.anchor} fontSize="11" fill={ok ? "var(--muted-foreground)" : "var(--danger)"} fontFamily="JetBrains Mono">
                   {ok ? `${n.rssi.toFixed(0)} dBm` : "FAULT"}
                 </text>
               )}
@@ -109,7 +111,7 @@ export function RoomView({ view = "room", compact = false }: { view?: "room" | "
         })}
       </svg>
       <div className="absolute left-3 top-3 rounded-md bg-background/70 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur">
-        Living Room · {view === "room" ? "Floor plan" : "Sensing field"}{!sensorOk && " · degraded"}
+        Living Room · {view === "room" ? "Floor Plan" : "Sensing Field"}{!sensorOk && " · degraded"}
       </div>
     </div>
   );
