@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, Moon, ShieldCheck, Sun, UserRound } from "lucide-react";
+import { LogOut, Menu, Moon, ShieldCheck, Sun, UserRound } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useGuard } from "@/lib/demo-store";
@@ -27,18 +28,23 @@ export function Logo() {
 }
 
 function RoleSwitch() {
-  const { role, setRole } = useGuard();
+  const { role, signedIn, demo, setDemo } = useGuard();
   return (
-    <div className="flex items-center rounded-full border border-border bg-muted/60 p-0.5 text-xs" title="Demo role switch — not real security">
-      <span className="px-2 font-mono text-[10px] uppercase tracking-wider text-warning">Demo</span>
-      {(["owner", "viewer"] as const).map((r) => (
-        <button key={r} onClick={() => setRole(r)}
-          className={cn("rounded-full px-2.5 py-1 font-semibold capitalize transition", role === r ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
-          {r}
-        </button>
-      ))}
+    <div className="flex items-center gap-2 text-xs">
+      {signedIn && <span className="rounded-full border border-border bg-muted/60 px-2.5 py-1 font-semibold capitalize">{role}</span>}
+      <label className="flex cursor-pointer items-center gap-2 rounded-full border border-border bg-muted/60 px-2.5 py-1" title="Use simulated data instead of live sensors">
+        <span className={cn("font-mono text-[10px] uppercase tracking-wider", demo ? "text-warning" : "text-muted-foreground")}>Demo</span>
+        <Switch checked={demo} onCheckedChange={setDemo} aria-label="Demo mode" />
+      </label>
     </div>
   );
+}
+
+function AuthButton({ onClick, mobile }: { onClick?: () => void; mobile?: boolean }) {
+  const { signedIn, signOut } = useGuard();
+  const cls = mobile ? "mt-3 rounded-lg bg-primary px-3 py-2.5 text-center font-semibold text-primary-foreground" : "hidden h-9 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 sm:inline-flex";
+  if (signedIn) return <button onClick={() => { onClick?.(); signOut(); }} className={cls}>{!mobile && <LogOut className="h-4 w-4" />} Sign out</button>;
+  return <Link to="/login" onClick={onClick} className={cls}>{!mobile && <UserRound className="h-4 w-4" />} Login</Link>;
 }
 
 export function Nav() {
@@ -63,9 +69,7 @@ export function Nav() {
           <button onClick={toggleTheme} aria-label="Toggle theme" className="grid h-9 w-9 place-items-center rounded-lg border border-border transition hover:bg-accent">
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
-          <Link to="/login" className="hidden h-9 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 sm:inline-flex">
-            <UserRound className="h-4 w-4" /> Login
-          </Link>
+          <AuthButton />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <button aria-label="Open menu" className="grid h-9 w-9 place-items-center rounded-lg border border-border xl:hidden"><Menu className="h-4 w-4" /></button>
@@ -78,7 +82,7 @@ export function Nav() {
                     className="rounded-lg px-3 py-2.5 text-muted-foreground hover:bg-accent hover:text-foreground"
                     activeProps={{ className: "!text-foreground bg-accent" }}>{l.label}</Link>
                 ))}
-                <Link to="/login" onClick={() => setOpen(false)} className="mt-3 rounded-lg bg-primary px-3 py-2.5 text-center font-semibold text-primary-foreground">Login</Link>
+                <AuthButton mobile onClick={() => setOpen(false)} />
                 <div className="mt-4"><RoleSwitch /></div>
               </div>
             </SheetContent>
@@ -102,7 +106,7 @@ export function Footer() {
         </div>
         <div className="text-sm text-muted-foreground md:text-right">
           <p>Built with ESP32 · RUView · React</p>
-          <p className="mt-2 font-mono text-xs">This interface runs on simulated demo data. No live hardware is connected.</p>
+          <p className="mt-2 font-mono text-xs">Live data from your ESP32 nodes. Turn on Demo mode for simulated data.</p>
         </div>
       </div>
     </footer>
