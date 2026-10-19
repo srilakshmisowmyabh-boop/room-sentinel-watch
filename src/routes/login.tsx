@@ -13,6 +13,8 @@ import { signupSchema } from "@/lib/viewer-schemas";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Login — SENSE GUARD" },
       { name: "description", content: "Sign in to SENSE GUARD or create an account." },
       { property: "og:title", content: "Login — SENSE GUARD" },

@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/events")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Event History — SENSE GUARD" },
       { name: "description", content: "Timestamped log of mode changes, presence events, intrusions, faults and Wi-Fi changes." },
       { property: "og:title", content: "Event History — SENSE GUARD" },

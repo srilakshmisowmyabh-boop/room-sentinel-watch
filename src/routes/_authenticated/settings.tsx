@@ -11,6 +11,8 @@ import { ViewersPanel } from "@/components/site/ViewersPanel";
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Settings — SENSE GUARD" },
       { name: "description", content: "Configure detection threshold, persistence, delays, alarm duration and Telegram alerts." },
       { property: "og:title", content: "Settings — SENSE GUARD" },

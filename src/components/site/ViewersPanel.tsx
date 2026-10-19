@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createViewerInvite, listViewers, revokeViewer } from "@/lib/viewers.functions";
 import { createInviteSchema } from "@/lib/viewer-schemas";
+import type { Database } from "@/integrations/supabase/types";
 
 const date = (value: string | null | undefined) => value ? new Date(value).toLocaleString() : "—";
 export function ViewersPanel() {
@@ -13,7 +14,7 @@ export function ViewersPanel() {
   const create = useServerFn(createViewerInvite);
   const revoke = useServerFn(revokeViewer);
   const queryClient = useQueryClient();
-  const { data: viewers, error, isPending } = useQuery({ queryKey: ["owner-viewers"], queryFn: () => list(), refetchInterval: 15000, gcTime: 0 });
+  const { data: viewers, error, isPending } = useQuery<Database["public"]["Functions"]["list_viewers"]["Returns"]>({ queryKey: ["owner-viewers"], queryFn: () => list(), refetchInterval: 15000, gcTime: 0 });
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [newInvite, setNewInvite] = useState<{ name: string; passkey: string } | null>(null);

@@ -6,6 +6,8 @@ import { Workflow } from "@/components/site/Workflow";
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "How It Works — SENSE GUARD" },
       { name: "description", content: "How RUView Wi-Fi sensing and ESP32 nodes detect human presence without cameras." },
       { property: "og:title", content: "How It Works — SENSE GUARD" },
