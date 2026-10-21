@@ -15,6 +15,13 @@
       "when": 1792408740798,
       "tag": "0001_viewer_invitations",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792575286016,
+      "tag": "0002_shared_viewer_passkey_activity_log",
+      "breakpoints": true
     }
   ]
 }
