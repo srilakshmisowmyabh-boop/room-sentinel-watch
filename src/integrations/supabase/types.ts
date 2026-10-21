@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          actor_email: string
+          actor_id: string | null
+          actor_name: string
+          created_at: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          role: string
+        }
+        Insert: {
+          action: string
+          actor_email?: string
+          actor_id?: string | null
+          actor_name?: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          role?: string
+        }
+        Update: {
+          action?: string
+          actor_email?: string
+          actor_id?: string | null
+          actor_name?: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          role?: string
+        }
+        Relationships: []
+      }
       alerts: {
         Row: {
           acknowledged: boolean
@@ -60,6 +96,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      auth_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          key_hash: string
+          scope: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_hash: string
+          scope: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_hash?: string
+          scope?: string
+        }
+        Relationships: []
       }
       device_keys: {
         Row: {
@@ -272,6 +329,54 @@ export type Database = {
         }
         Relationships: []
       }
+      viewer_access: {
+        Row: {
+          id: number
+          passkey_hash: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          passkey_hash: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          passkey_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      viewer_accounts: {
+        Row: {
+          blocked_at: string | null
+          current_session_id: string | null
+          email: string
+          first_sign_in_at: string | null
+          last_sign_in_at: string | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          blocked_at?: string | null
+          current_session_id?: string | null
+          email: string
+          first_sign_in_at?: string | null
+          last_sign_in_at?: string | null
+          name: string
+          user_id: string
+        }
+        Update: {
+          blocked_at?: string | null
+          current_session_id?: string | null
+          email?: string
+          first_sign_in_at?: string | null
+          last_sign_in_at?: string | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       viewer_invites: {
         Row: {
           created_at: string
@@ -310,6 +415,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auth_user_by_email: {
+        Args: { _email: string }
+        Returns: {
+          id: string
+          is_owner: boolean
+        }[]
+      }
       device_has_key: { Args: { _device_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -334,6 +446,18 @@ export type Database = {
       }
       revoke_viewer: { Args: { _id: string }; Returns: string }
       rotate_device_key: { Args: { _device_id: string }; Returns: string }
+      write_activity: {
+        Args: {
+          _action: string
+          _actor: string
+          _email?: string
+          _name?: string
+          _new: Json
+          _old: Json
+          _role?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "owner" | "viewer"
