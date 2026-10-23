@@ -22,6 +22,13 @@
       "when": 1792575286016,
       "tag": "0002_shared_viewer_passkey_activity_log",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792736487629,
+      "tag": "0003_viewer_access_grants",
+      "breakpoints": true
     }
   ]
 }
