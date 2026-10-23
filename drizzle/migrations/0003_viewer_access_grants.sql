@@ -1,0 +1,10 @@
+GRANT SELECT ON public.activity_log TO authenticated;
+GRANT ALL ON public.activity_log TO service_role;
+GRANT SELECT ON public.viewer_accounts TO authenticated;
+GRANT ALL ON public.viewer_accounts TO service_role;
+GRANT ALL ON public.viewer_access TO service_role;
+GRANT ALL ON public.auth_attempts TO service_role;
+REVOKE EXECUTE ON FUNCTION public.write_activity(uuid, text, jsonb, jsonb, text, text, text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.write_activity(uuid, text, jsonb, jsonb, text, text, text) TO service_role;
+REVOKE EXECUTE ON FUNCTION public.auth_user_by_email(text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.auth_user_by_email(text) TO service_role;
