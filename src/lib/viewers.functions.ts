@@ -21,6 +21,13 @@ export const signupAvailability = createServerFn({ method: "GET" }).handler(asyn
   return { firstOwner: !data.owner_claimed };
 });
 
+// Public: only reveals whether a shared viewer passkey has been set.
+export const viewerPasskeyStatus = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("viewer_access").select("updated_at").eq("id", 1).maybeSingle();
+  return { set: !!data, updatedAt: data?.updated_at ?? null };
+});
+
 // The very first sign-up creates the Owner and sets the shared viewer passkey.
 // After that, account creation is closed — viewers sign in with the passkey.
 export const registerOwner = createServerFn({ method: "POST" })
