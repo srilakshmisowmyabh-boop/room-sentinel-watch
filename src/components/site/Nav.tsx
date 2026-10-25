@@ -52,15 +52,21 @@ function AuthButton({ onClick, mobile }: { onClick?: () => void; mobile?: boolea
   return <Link to="/login" onClick={onClick} className={cls}>{!mobile && <UserRound className="h-4 w-4" />} Login</Link>;
 }
 
+function useLinks() {
+  const { role, signedIn } = useGuard();
+  return signedIn && role === "owner" ? [...links.slice(0, 6), { to: "/activity", label: "Activity" } as const, links[6]] : links;
+}
+
 export function Nav() {
   const { theme, toggleTheme, mode } = useGuard();
+  const navLinks = useLinks();
   const [open, setOpen] = useState(false);
   return (
     <header className="fixed inset-x-0 top-0 z-[100] border-b border-border bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
         <Logo />
         <nav className="hidden items-center gap-1 xl:flex">
-          {links.map((l) => (
+          {navLinks.map((l) => (
             <Link key={l.to} to={l.to} activeOptions={{ exact: l.to === "/" }}
               className={navCls}
               activeProps={{ className: navActive, "aria-current": "page" }}>
@@ -82,7 +88,7 @@ export function Nav() {
             <SheetContent side="right" className="w-72 border-border bg-background">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
               <div className="mt-8 flex flex-col gap-1">
-                {links.map((l) => (
+                {navLinks.map((l) => (
                   <Link key={l.to} to={l.to} onClick={() => setOpen(false)} activeOptions={{ exact: l.to === "/" }}
                     className={cn(navCls, "rounded-xl py-2.5 text-base")}
                     activeProps={{ className: navActiveMobile, "aria-current": "page" }}>{l.label}</Link>
