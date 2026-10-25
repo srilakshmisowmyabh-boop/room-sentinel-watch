@@ -34,6 +34,6 @@ export async function hashPasskey(value: string): Promise<string> {
 
 // Keys for attempt counters are salted hashes so raw emails/IPs are never stored.
 export async function attemptKeyHash(value: string): Promise<string> {
-  const secret = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.VIEWER_CREDENTIAL_SECRET ?? "sense-guard";
+  const secret = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.["VIEWER_CREDENTIAL_SECRET"] ?? "sense-guard";
   return hashPasskey(`${secret}:${value}`);
 }
