@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedEventsRouteImport } from './routes/_authenticated/events'
@@ -43,6 +44,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/events': typeof AuthenticatedEventsRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/events': typeof AuthenticatedEventsRoute
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/events': typeof AuthenticatedEventsRoute
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/how-it-works'
     | '/login'
+    | '/reset-password'
     | '/activity'
     | '/dashboard'
     | '/events'
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/how-it-works'
     | '/login'
+    | '/reset-password'
     | '/activity'
     | '/dashboard'
     | '/events'
@@ -146,6 +157,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/how-it-works'
     | '/login'
+    | '/reset-password'
     | '/_authenticated/activity'
     | '/_authenticated/dashboard'
     | '/_authenticated/events'
@@ -160,6 +172,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   HowItWorksRoute: typeof HowItWorksRoute
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicDevicesIngestRoute: typeof ApiPublicDevicesIngestRoute
 }
 
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/activity': {
@@ -270,6 +290,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   HowItWorksRoute: HowItWorksRoute,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicDevicesIngestRoute: ApiPublicDevicesIngestRoute,
 }
 export const routeTree = rootRouteImport

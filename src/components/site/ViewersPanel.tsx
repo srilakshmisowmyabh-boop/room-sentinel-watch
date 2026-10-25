@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, UserX, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { listViewers, setViewerBlocked, setViewerPasskey } from "@/lib/viewers.functions";
+import { listViewers, setViewerBlocked, setViewerPasskey, viewerPasskeyStatus } from "@/lib/viewers.functions";
 import { viewerPasskeySchema } from "@/lib/viewer-schemas";
 
 type Viewer = { user_id: string; name: string; email: string; first_sign_in_at: string | null; last_sign_in_at: string | null; blocked_at: string | null };
@@ -16,7 +16,10 @@ export function ViewersPanel() {
   const savePasskey = useServerFn(setViewerPasskey);
   const queryClient = useQueryClient();
   const { data: viewers, error, isPending } = useQuery<Viewer[]>({ queryKey: ["owner-viewers"], queryFn: () => list(), refetchInterval: 15000, gcTime: 0 });
+  const statusFn = useServerFn(viewerPasskeyStatus);
+  const { data: status, refetch: refetchStatus } = useQuery({ queryKey: ["viewer-passkey-status"], queryFn: () => statusFn() });
   const [passkey, setPasskey] = useState("");
+  const [passkey2, setPasskey2] = useState("");
   const [busy, setBusy] = useState(false);
   useEffect(() => () => { queryClient.removeQueries({ queryKey: ["owner-viewers"] }); }, [queryClient]);
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["owner-viewers"] });
@@ -25,11 +28,12 @@ export function ViewersPanel() {
     event.preventDefault();
     const parsed = viewerPasskeySchema.safeParse(passkey);
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Enter a passkey."); return; }
+    if (parsed.data !== passkey2.trim()) { toast.error("Passkeys do not match."); return; }
     if (!confirm("Save this viewer passkey? All signed-in viewers will be signed out and must use the new passkey.")) return;
     setBusy(true);
     try {
       await savePasskey({ data: { passkey: parsed.data } });
-      setPasskey("");
+      setPasskey(""); setPasskey2(""); refetchStatus();
       toast.success("Viewer passkey saved. All viewers were signed out.");
     } catch (err) { toast.error(err instanceof Error ? err.message : "Unable to save the passkey."); }
     finally { setBusy(false); }
@@ -48,16 +52,23 @@ export function ViewersPanel() {
   };
 
   return <section className="border-t border-border pt-6" aria-labelledby="viewers-heading">
-    <h2 id="viewers-heading" className="text-xl font-semibold">Viewers</h2>
+    <h2 id="viewers-heading" className="text-xl font-semibold">Viewer passkey</h2>
+    <p className="mt-2 text-sm">{status ? (status.set ? <span className="text-success">Passkey is set{status.updatedAt ? ` (last changed ${date(status.updatedAt)})` : ""}.</span> : <span className="text-warning">No passkey set — viewers cannot sign in yet.</span>) : "Checking…"}</p>
     <form onSubmit={save} className="mt-4 flex flex-wrap items-end gap-3">
       <label className="min-w-0 flex-1 space-y-1.5 text-sm">
         <span>Viewer passkey</span>
         <input type="password" value={passkey} onChange={(event) => setPasskey(event.target.value)} minLength={8} maxLength={128} autoComplete="off"
           placeholder="New shared passkey (8+ characters)" className="w-full rounded-lg border border-input bg-background/60 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring" />
       </label>
-      <Button type="submit" disabled={busy}><KeyRound />Save passkey</Button>
+      <label className="min-w-0 flex-1 space-y-1.5 text-sm">
+        <span>Confirm passkey</span>
+        <input type="password" value={passkey2} onChange={(event) => setPasskey2(event.target.value)} maxLength={128} autoComplete="off"
+          placeholder="Enter it again" className="w-full rounded-lg border border-input bg-background/60 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+      </label>
+      <Button type="submit" disabled={busy}><KeyRound />{status?.set ? "Change passkey" : "Set passkey"}</Button>
     </form>
     <p className="mt-2 text-xs text-muted-foreground">Viewers sign in with their name, email and this shared passkey — no password. Saving a new passkey signs out all current viewers. The passkey is stored hashed and never shown.</p>
+    <h3 className="mt-8 text-lg font-semibold">Viewers</h3>
     {isPending && <p className="mt-4 text-sm text-muted-foreground">Loading viewers…</p>}
     {error && <p className="mt-4 text-sm text-danger">Unable to load viewers.</p>}
     {viewers?.length === 0 && <p className="mt-5 text-sm text-muted-foreground">No viewers have signed in yet.</p>}

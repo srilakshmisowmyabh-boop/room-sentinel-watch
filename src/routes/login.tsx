@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useGuard } from "@/lib/demo-store";
 import { cn } from "@/lib/utils";
 import { useServerFn } from "@tanstack/react-start";
-import { claimViewerSession, recordOwnerSignIn, registerOwner, signupAvailability, viewerAccess } from "@/lib/viewers.functions";
+import { claimViewerSession, recordOwnerSignIn, registerOwner, signupAvailability, viewerAccess, viewerPasskeyStatus } from "@/lib/viewers.functions";
 import { ownerSignupSchema, viewerAccessSchema } from "@/lib/viewer-schemas";
 
 export const Route = createFileRoute("/login")({
@@ -38,6 +38,10 @@ function Login() {
   const recordSignIn = useServerFn(recordOwnerSignIn);
   const availability = useServerFn(signupAvailability);
   const [firstOwner, setFirstOwner] = useState(false);
+  const passkeyStatus = useServerFn(viewerPasskeyStatus);
+  const [passkeySet, setPasskeySet] = useState(true);
+  const [forgot, setForgot] = useState(false);
+  useEffect(() => { passkeyStatus().then((r) => setPasskeySet(r.set)).catch(() => undefined); }, [passkeyStatus]);
   useEffect(() => {
     availability().then((result) => setFirstOwner(result.firstOwner)).catch(() => setFirstOwner(false));
   }, [availability]);
@@ -56,6 +60,18 @@ function Login() {
     recordSignIn().catch(() => undefined);
     toast.success("Signed in");
     nav({ to: "/dashboard" });
+  };
+
+  const onForgot = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const email = String(new FormData(e.currentTarget).get("email") ?? "").trim();
+    if (!email) { setErr("Enter your email."); return; }
+    setErr(""); setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
+    setBusy(false);
+    if (error) { setErr(error.message); return; }
+    toast.success("If that email belongs to the Owner, a reset link is on its way.");
+    setForgot(false);
   };
 
   const onViewer = async (e: FormEvent<HTMLFormElement>) => {
@@ -84,6 +100,8 @@ function Login() {
       password: String(f.get("pass") ?? ""), viewerPasskey: String(f.get("passkey") ?? ""),
     });
     if (!parsed.success) { setErr(parsed.error.issues[0]?.message ?? "Please check your details."); return; }
+    if (parsed.data.password !== String(f.get("pass2") ?? "")) { setErr("Passwords do not match."); return; }
+    if (parsed.data.viewerPasskey !== String(f.get("passkey2") ?? "").trim()) { setErr("Passkeys do not match."); return; }
     setErr(""); setBusy(true);
     try {
       const result = await register({ data: parsed.data });
@@ -96,7 +114,7 @@ function Login() {
   const tabs = [
     ["login", "Sign in", KeyRound],
     ["viewer", "Viewer access", Users],
-    ...(firstOwner ? [["signup", "Create account", UserPlus] as const] : []),
+    ...(firstOwner ? [["signup", "Create Owner account", UserPlus] as const] : []),
   ] as const;
 
   return (
@@ -115,15 +133,25 @@ function Login() {
             <button key={v} type="button" onClick={() => { setTab(v); setErr(""); }} className={cn("flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition", tab === v ? "bg-primary text-primary-foreground" : "text-muted-foreground")}><I className="h-4 w-4" />{l}</button>
           ))}
         </div>
-        {tab === "login" && (
+        {tab === "login" && forgot && (
+          <form onSubmit={onForgot} className="space-y-4">
+            <label className="block space-y-1.5 text-sm"><span>Owner email</span><input name="email" type="email" className={input} autoComplete="email" /></label>
+            {err && <p className="text-sm text-danger">{err}</p>}
+            <button disabled={busy} className="w-full rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow disabled:opacity-60">{busy ? "Sending…" : "Send reset link"}</button>
+            <button type="button" onClick={() => { setForgot(false); setErr(""); }} className="w-full text-sm text-muted-foreground hover:text-foreground">Back to sign in</button>
+          </form>
+        )}
+        {tab === "login" && !forgot && (
           <form onSubmit={onLogin} className="space-y-4">
             <label className="block space-y-1.5 text-sm"><span>Email</span><input name="email" type="email" className={input} autoComplete="email" /></label>
             <label className="block space-y-1.5 text-sm"><span>Password</span><input name="pass" type="password" className={input} autoComplete="current-password" /></label>
             {err && <p className="text-sm text-danger">{err}</p>}
             <button disabled={busy} className="w-full rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow disabled:opacity-60">{busy ? "Signing in…" : "Sign in"}</button>
+            <button type="button" onClick={() => { setForgot(true); setErr(""); }} className="w-full text-sm text-primary hover:underline">Forgot password?</button>
           </form>
         )}
-        {tab === "viewer" && (
+        {tab === "viewer" && !passkeySet && <p className="rounded-xl border border-border bg-muted/50 p-4 text-sm">Viewer access isn't available yet. Ask the Owner to set a passkey.</p>}
+        {tab === "viewer" && passkeySet && (
           <form onSubmit={onViewer} className="space-y-4">
             <label className="block space-y-1.5 text-sm"><span>Name</span><input name="name" className={input} autoComplete="name" maxLength={60} /></label>
             <label className="block space-y-1.5 text-sm"><span>Email</span><input name="email" type="email" className={input} autoComplete="email" /></label>
@@ -138,7 +166,9 @@ function Login() {
             <label className="block space-y-1.5 text-sm"><span>Name</span><input name="name" className={input} autoComplete="name" maxLength={60} required /></label>
             <label className="block space-y-1.5 text-sm"><span>Email</span><input name="email" type="email" className={input} autoComplete="email" /></label>
             <label className="block space-y-1.5 text-sm"><span>Password (8+ characters)</span><input name="pass" type="password" className={input} autoComplete="new-password" /></label>
+            <label className="block space-y-1.5 text-sm"><span>Confirm password</span><input name="pass2" type="password" className={input} autoComplete="new-password" /></label>
             <label className="block space-y-1.5 text-sm"><span>Viewer passkey (8+ characters)</span><input name="passkey" type="password" className={input} autoComplete="off" maxLength={128} /></label>
+            <label className="block space-y-1.5 text-sm"><span>Confirm viewer passkey</span><input name="passkey2" type="password" className={input} autoComplete="off" maxLength={128} /></label>
             {err && <p className="text-sm text-danger">{err}</p>}
             <button disabled={busy} className="w-full rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow disabled:opacity-60">{busy ? "Creating…" : "Create Owner account"}</button>
             <p className="text-xs text-muted-foreground">The viewer passkey is shared with people you want to grant view-only access. Only this first sign-up creates an account.</p>
