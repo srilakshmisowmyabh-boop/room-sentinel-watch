@@ -66,7 +66,7 @@ export const viewerAccess = createServerFn({ method: "POST" })
       if (logAttempt) {
         await supabaseAdmin.from("auth_attempts").insert([{ scope: "email", key_hash: emailKey }, { scope: "ip", key_hash: ipKey }]);
         await supabaseAdmin.rpc("write_activity", {
-          _actor: null, _action: "viewer_signin_failed", _old: null,
+          _actor: null as unknown as string, _action: "viewer_signin_failed", _old: null,
           _new: { name: data.name, email, reason: message }, _name: data.name, _email: email, _role: "viewer",
         });
       }
@@ -134,7 +134,8 @@ export const recordOwnerSignIn = createServerFn({ method: "POST" }).middleware([
   return { ok: true };
 });
 
-async function requireOwner(supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> }, userId: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function requireOwner(supabase: any, userId: string) {
   const { data: owner, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "owner" });
   if (error || !owner) throw new Error("Only the Owner can do this.");
 }
