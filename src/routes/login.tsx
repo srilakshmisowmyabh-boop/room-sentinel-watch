@@ -6,6 +6,7 @@ import { SignalRings } from "@/components/site/primitives";
 import { supabase } from "@/integrations/supabase/client";
 import { useGuard } from "@/lib/demo-store";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useServerFn } from "@tanstack/react-start";
 import { claimViewerSession, recordOwnerSignIn, registerOwner, signupAvailability, viewerAccess, viewerPasskeyStatus } from "@/lib/viewers.functions";
 import { ownerSignupSchema, viewerAccessSchema } from "@/lib/viewer-schemas";
@@ -41,6 +42,7 @@ function Login() {
   const passkeyStatus = useServerFn(viewerPasskeyStatus);
   const [passkeySet, setPasskeySet] = useState(true);
   const [forgot, setForgot] = useState(false);
+  const [chooser, setChooser] = useState(true);
   useEffect(() => { passkeyStatus().then((r) => setPasskeySet(r.set)).catch(() => undefined); }, [passkeyStatus]);
   useEffect(() => {
     availability().then((result) => setFirstOwner(result.firstOwner)).catch(() => setFirstOwner(false));
@@ -56,7 +58,7 @@ function Login() {
     setErr(""); setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) { setErr(error.message); return; }
+    if (error) { setErr("Invalid email or password"); return; }
     recordSignIn().catch(() => undefined);
     toast.success("Signed in");
     nav({ to: "/dashboard" });
@@ -112,27 +114,45 @@ function Login() {
   };
 
   const tabs = [
-    ["login", "Sign in", KeyRound],
-    ["viewer", "Viewer access", Users],
-    ...(firstOwner ? [["signup", "Create Owner account", UserPlus] as const] : []),
+    ["login", "Owner", KeyRound],
+    ["viewer", "Viewer", Users],
   ] as const;
 
   return (
     <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl items-center gap-10 px-4 py-12 md:px-6 lg:grid-cols-2">
+      <Dialog open={chooser} onOpenChange={setChooser}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Welcome to SENSE GUARD</DialogTitle>
+            <DialogDescription>Choose how you want to continue.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <button type="button" onClick={() => { setTab("signup"); setErr(""); setForgot(false); setChooser(false); }} className="flex items-center justify-center gap-2 rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><UserPlus className="h-4 w-4" />First-time user? Create account</button>
+            <button type="button" onClick={() => { setTab("login"); setErr(""); setChooser(false); }} className="flex items-center justify-center gap-2 rounded-xl border border-border py-3 font-semibold transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><KeyRound className="h-4 w-4" />Already have an account? Sign in</button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <div className="hidden lg:block">
         <div className="relative mx-auto grid h-72 w-72 place-items-center">
           <SignalRings />
           <span className="grid h-24 w-24 place-items-center rounded-3xl bg-brand glow"><ShieldCheck className="h-12 w-12 text-primary-foreground" /></span>
         </div>
         <h2 className="mt-10 text-center text-3xl font-semibold">Welcome to <span className="text-gradient">SENSE GUARD</span></h2>
-        <p className="mt-3 text-center text-muted-foreground">{firstOwner ? "The first account becomes the Owner and sets the viewer passkey." : "Viewers sign in with their name, email and the passkey shared by the Owner."}</p>
+        <p className="mt-3 text-center text-muted-foreground">The Owner manages the system. Viewers sign in with their name, email and the passkey shared by the Owner.</p>
       </div>
       <div className="glass p-6 md:p-8">
-        <div className="mb-6 flex rounded-xl border border-border bg-muted/50 p-1">
-          {tabs.map(([v, l, I]) => (
-            <button key={v} type="button" onClick={() => { setTab(v); setErr(""); }} className={cn("flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition", tab === v ? "bg-primary text-primary-foreground" : "text-muted-foreground")}><I className="h-4 w-4" />{l}</button>
-          ))}
-        </div>
+        {tab === "signup" ? (
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Create Owner account</h3>
+            <button type="button" onClick={() => { setTab("login"); setErr(""); }} className="text-sm text-primary hover:underline">Sign in instead</button>
+          </div>
+        ) : (
+          <div className="mb-6 flex rounded-xl border border-border bg-muted/50 p-1">
+            {tabs.map(([v, l, I]) => (
+              <button key={v} type="button" onClick={() => { setTab(v); setErr(""); }} className={cn("flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition", tab === v ? "bg-primary text-primary-foreground" : "text-muted-foreground")}><I className="h-4 w-4" />{l}</button>
+            ))}
+          </div>
+        )}
         {tab === "login" && forgot && (
           <form onSubmit={onForgot} className="space-y-4">
             <label className="block space-y-1.5 text-sm"><span>Owner email</span><input name="email" type="email" className={input} autoComplete="email" /></label>
@@ -161,7 +181,7 @@ function Login() {
             <p className="text-xs text-muted-foreground">No password needed. Get the passkey from the Owner.</p>
           </form>
         )}
-        {tab === "signup" && firstOwner && (
+        {tab === "signup" && (
           <form onSubmit={onSignup} className="space-y-4">
             <label className="block space-y-1.5 text-sm"><span>Name</span><input name="name" className={input} autoComplete="name" maxLength={60} required /></label>
             <label className="block space-y-1.5 text-sm"><span>Email</span><input name="email" type="email" className={input} autoComplete="email" /></label>
