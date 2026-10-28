@@ -6,6 +6,7 @@ import { SignalRings } from "@/components/site/primitives";
 import { supabase } from "@/integrations/supabase/client";
 import { useGuard } from "@/lib/demo-store";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useServerFn } from "@tanstack/react-start";
 import { claimViewerSession, recordOwnerSignIn, registerOwner, signupAvailability, viewerAccess, viewerPasskeyStatus } from "@/lib/viewers.functions";
 import { ownerSignupSchema, viewerAccessSchema } from "@/lib/viewer-schemas";
@@ -41,6 +42,7 @@ function Login() {
   const passkeyStatus = useServerFn(viewerPasskeyStatus);
   const [passkeySet, setPasskeySet] = useState(true);
   const [forgot, setForgot] = useState(false);
+  const [chooser, setChooser] = useState(true);
   useEffect(() => { passkeyStatus().then((r) => setPasskeySet(r.set)).catch(() => undefined); }, [passkeyStatus]);
   useEffect(() => {
     availability().then((result) => setFirstOwner(result.firstOwner)).catch(() => setFirstOwner(false));
@@ -56,7 +58,7 @@ function Login() {
     setErr(""); setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) { setErr(error.message); return; }
+    if (error) { setErr("Invalid email or password"); return; }
     recordSignIn().catch(() => undefined);
     toast.success("Signed in");
     nav({ to: "/dashboard" });
@@ -179,7 +181,7 @@ function Login() {
             <p className="text-xs text-muted-foreground">No password needed. Get the passkey from the Owner.</p>
           </form>
         )}
-        {tab === "signup" && firstOwner && (
+        {tab === "signup" && (
           <form onSubmit={onSignup} className="space-y-4">
             <label className="block space-y-1.5 text-sm"><span>Name</span><input name="name" className={input} autoComplete="name" maxLength={60} required /></label>
             <label className="block space-y-1.5 text-sm"><span>Email</span><input name="email" type="email" className={input} autoComplete="email" /></label>
