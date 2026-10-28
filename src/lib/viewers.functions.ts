@@ -36,7 +36,7 @@ export const registerOwner = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: state, error: stateError } = await supabaseAdmin.from("signup_state").select("owner_claimed").eq("id", 1).single();
     if (stateError) return { ok: false as const, message: "Account registration is temporarily unavailable." };
-    if (state.owner_claimed) return { ok: false as const, message: "Account creation is closed. An Owner already exists." };
+    if (state.owner_claimed) return { ok: false as const, message: "An Owner account already exists. Please sign in." };
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
       password: data.password,
@@ -82,7 +82,7 @@ export const viewerAccess = createServerFn({ method: "POST" })
 
     const { data: access } = await supabaseAdmin.from("viewer_access").select("passkey_hash").eq("id", 1).maybeSingle();
     if (!access) return { ok: false as const, message: "Viewer access is not set up yet. Ask the Owner to set a viewer passkey." };
-    if (access.passkey_hash !== await hashPasskey(data.passkey)) return fail("Incorrect passkey.", true);
+    if (access.passkey_hash !== await hashPasskey(data.passkey)) return fail("Invalid passkey", true);
 
     const { data: found } = await supabaseAdmin.rpc("auth_user_by_email", { _email: email });
     const existing = found?.[0];
