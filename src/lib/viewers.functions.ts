@@ -44,7 +44,16 @@ export const registerOwner = createServerFn({ method: "POST" })
       user_metadata: { display_name: data.name },
       app_metadata: { viewer_passkey_hash: await hashPasskey(data.viewerPasskey) },
     });
-    if (error || !created.user) return { ok: false as const, message: "Unable to create account. This email may already be registered; try signing in." };
+    if (error || !created.user) {
+      const raw = (error?.message ?? "").toLowerCase();
+      let message = "Unable to create account. Please try again.";
+      if (raw.includes("already") || raw.includes("registered") || raw.includes("duplicate")) message = "This email is already registered. Try signing in instead.";
+      else if (raw.includes("password") && (raw.includes("weak") || raw.includes("short") || raw.includes("length"))) message = "The password is too weak. Use at least 8 characters.";
+      else if (raw.includes("compromised") || raw.includes("breach") || raw.includes("leaked") || raw.includes("pwned")) message = "This password has appeared in a data leak. Please choose a different one.";
+      else if (raw.includes("signups") || raw.includes("sign-up") || raw.includes("disabled")) message = "Account sign-ups are currently disabled.";
+      else if (error?.message) message = `Unable to create account: ${error.message}`;
+      return { ok: false as const, message };
+    }
     await supabaseAdmin.rpc("write_activity", {
       _actor: created.user.id, _action: "owner_registered", _old: null,
       _new: { name: data.name, email: data.email }, _name: data.name, _email: data.email, _role: "owner",

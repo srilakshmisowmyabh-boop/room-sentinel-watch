@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { KeyRound, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { Check, KeyRound, ShieldCheck, UserPlus, Users, X } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { SignalRings } from "@/components/site/primitives";
@@ -8,7 +8,7 @@ import { useGuard } from "@/lib/demo-store";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useServerFn } from "@tanstack/react-start";
-import { claimViewerSession, recordOwnerSignIn, registerOwner, signupAvailability, viewerAccess, viewerPasskeyStatus } from "@/lib/viewers.functions";
+import { claimViewerSession, recordOwnerSignIn, registerOwner, signupAvailability, viewerAccess } from "@/lib/viewers.functions";
 import { ownerSignupSchema, viewerAccessSchema } from "@/lib/viewer-schemas";
 
 export const Route = createFileRoute("/login")({
@@ -27,6 +27,14 @@ export const Route = createFileRoute("/login")({
 
 const input = "w-full rounded-xl border border-input bg-background/60 px-4 py-3 outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30";
 
+// Green tick when the confirmation matches, red cross when it doesn't.
+function MatchMark({ value, match }: { value: string; match: string }) {
+  if (!value) return null;
+  return value === match
+    ? <Check className="h-4 w-4 text-success" aria-label="Matches" />
+    : <X className="h-4 w-4 text-danger" aria-label="Does not match" />;
+}
+
 function Login() {
   const [tab, setTab] = useState<"login" | "viewer" | "signup">("login");
   const [err, setErr] = useState("");
@@ -38,17 +46,27 @@ function Login() {
   const claim = useServerFn(claimViewerSession);
   const recordSignIn = useServerFn(recordOwnerSignIn);
   const availability = useServerFn(signupAvailability);
-  const [firstOwner, setFirstOwner] = useState(false);
-  const passkeyStatus = useServerFn(viewerPasskeyStatus);
-  const [passkeySet, setPasskeySet] = useState(true);
+  const [firstOwner, setFirstOwner] = useState<boolean | null>(null);
   const [forgot, setForgot] = useState(false);
   const [chooser, setChooser] = useState(true);
-  useEffect(() => { passkeyStatus().then((r) => setPasskeySet(r.set)).catch(() => undefined); }, [passkeyStatus]);
+  // Controlled create-account fields so the tick/cross marks and the
+  // disabled button update as the user types.
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [pass2, setPass2] = useState("");
+  const [passkey, setPasskey] = useState("");
+  const [passkey2, setPasskey2] = useState("");
   useEffect(() => {
     availability().then((result) => setFirstOwner(result.firstOwner)).catch(() => setFirstOwner(false));
   }, [availability]);
 
   useEffect(() => { if (g.authReady && g.signedIn) nav({ to: "/dashboard" }); }, [g.authReady, g.signedIn, nav]);
+
+  const signupReady =
+    name.trim().length > 0 && email.trim().length > 0 &&
+    pass.length >= 8 && pass2 === pass &&
+    passkey.trim().length >= 8 && passkey2.trim() === passkey.trim();
 
   const onLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -96,14 +114,10 @@ function Login() {
 
   const onSignup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const parsed = ownerSignupSchema.safeParse({
-      name: String(f.get("name") ?? ""), email: String(f.get("email") ?? ""),
-      password: String(f.get("pass") ?? ""), viewerPasskey: String(f.get("passkey") ?? ""),
-    });
+    const parsed = ownerSignupSchema.safeParse({ name, email, password: pass, viewerPasskey: passkey });
     if (!parsed.success) { setErr(parsed.error.issues[0]?.message ?? "Please check your details."); return; }
-    if (parsed.data.password !== String(f.get("pass2") ?? "")) { setErr("Passwords do not match."); return; }
-    if (parsed.data.viewerPasskey !== String(f.get("passkey2") ?? "").trim()) { setErr("Passkeys do not match."); return; }
+    if (pass !== pass2) { setErr("Passwords do not match."); return; }
+    if (passkey.trim() !== passkey2.trim()) { setErr("Passkeys do not match."); return; }
     setErr(""); setBusy(true);
     try {
       const result = await register({ data: parsed.data });
@@ -127,7 +141,9 @@ function Login() {
             <DialogDescription>Choose how you want to continue.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
-            <button type="button" onClick={() => { setTab("signup"); setErr(""); setForgot(false); setChooser(false); }} className="flex items-center justify-center gap-2 rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><UserPlus className="h-4 w-4" />First-time user? Create account</button>
+            {firstOwner && (
+              <button type="button" onClick={() => { setTab("signup"); setErr(""); setForgot(false); setChooser(false); }} className="flex items-center justify-center gap-2 rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><UserPlus className="h-4 w-4" />First-time user? Create account</button>
+            )}
             <button type="button" onClick={() => { setTab("login"); setErr(""); setChooser(false); }} className="flex items-center justify-center gap-2 rounded-xl border border-border py-3 font-semibold transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><KeyRound className="h-4 w-4" />Already have an account? Sign in</button>
           </div>
         </DialogContent>
@@ -141,7 +157,7 @@ function Login() {
         <p className="mt-3 text-center text-muted-foreground">The Owner manages the system. Viewers sign in with their name, email and the passkey shared by the Owner.</p>
       </div>
       <div className="glass p-6 md:p-8">
-        {tab === "signup" ? (
+        {tab === "signup" && firstOwner ? (
           <div className="mb-6 flex items-center justify-between">
             <h3 className="text-lg font-semibold">Create Owner account</h3>
             <button type="button" onClick={() => { setTab("login"); setErr(""); }} className="text-sm text-primary hover:underline">Sign in instead</button>
@@ -170,8 +186,7 @@ function Login() {
             <button type="button" onClick={() => { setForgot(true); setErr(""); }} className="w-full text-sm text-primary hover:underline">Forgot password?</button>
           </form>
         )}
-        {tab === "viewer" && !passkeySet && <p className="rounded-xl border border-border bg-muted/50 p-4 text-sm">Viewer access isn't available yet. Ask the Owner to set a passkey.</p>}
-        {tab === "viewer" && passkeySet && (
+        {tab === "viewer" && (
           <form onSubmit={onViewer} className="space-y-4">
             <label className="block space-y-1.5 text-sm"><span>Name</span><input name="name" className={input} autoComplete="name" maxLength={60} /></label>
             <label className="block space-y-1.5 text-sm"><span>Email</span><input name="email" type="email" className={input} autoComplete="email" /></label>
@@ -181,16 +196,22 @@ function Login() {
             <p className="text-xs text-muted-foreground">No password needed. Get the passkey from the Owner.</p>
           </form>
         )}
-        {tab === "signup" && (
+        {tab === "signup" && firstOwner && (
           <form onSubmit={onSignup} className="space-y-4">
-            <label className="block space-y-1.5 text-sm"><span>Name</span><input name="name" className={input} autoComplete="name" maxLength={60} required /></label>
-            <label className="block space-y-1.5 text-sm"><span>Email</span><input name="email" type="email" className={input} autoComplete="email" /></label>
-            <label className="block space-y-1.5 text-sm"><span>Password (8+ characters)</span><input name="pass" type="password" className={input} autoComplete="new-password" /></label>
-            <label className="block space-y-1.5 text-sm"><span>Confirm password</span><input name="pass2" type="password" className={input} autoComplete="new-password" /></label>
-            <label className="block space-y-1.5 text-sm"><span>Viewer passkey (8+ characters)</span><input name="passkey" type="password" className={input} autoComplete="off" maxLength={128} /></label>
-            <label className="block space-y-1.5 text-sm"><span>Confirm viewer passkey</span><input name="passkey2" type="password" className={input} autoComplete="off" maxLength={128} /></label>
+            <label className="block space-y-1.5 text-sm"><span>Name</span><input value={name} onChange={(e) => setName(e.target.value)} className={input} autoComplete="name" maxLength={60} required /></label>
+            <label className="block space-y-1.5 text-sm"><span>Email</span><input value={email} onChange={(e) => setEmail(e.target.value)} type="email" className={input} autoComplete="email" /></label>
+            <label className="block space-y-1.5 text-sm"><span>Password (8+ characters)</span><input value={pass} onChange={(e) => setPass(e.target.value)} type="password" className={input} autoComplete="new-password" /></label>
+            <label className="block space-y-1.5 text-sm">
+              <span className="flex items-center justify-between gap-2">Confirm password <MatchMark value={pass2} match={pass} /></span>
+              <input value={pass2} onChange={(e) => setPass2(e.target.value)} type="password" className={input} autoComplete="new-password" />
+            </label>
+            <label className="block space-y-1.5 text-sm"><span>Viewer passkey (8+ characters)</span><input value={passkey} onChange={(e) => setPasskey(e.target.value)} type="password" className={input} autoComplete="off" maxLength={128} /></label>
+            <label className="block space-y-1.5 text-sm">
+              <span className="flex items-center justify-between gap-2">Confirm viewer passkey <MatchMark value={passkey2.trim()} match={passkey.trim()} /></span>
+              <input value={passkey2} onChange={(e) => setPasskey2(e.target.value)} type="password" className={input} autoComplete="off" maxLength={128} />
+            </label>
             {err && <p className="text-sm text-danger">{err}</p>}
-            <button disabled={busy} className="w-full rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow disabled:opacity-60">{busy ? "Creating…" : "Create Owner account"}</button>
+            <button disabled={busy || !signupReady} className="w-full rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow disabled:opacity-60">{busy ? "Creating…" : "Create Owner account"}</button>
             <p className="text-xs text-muted-foreground">The viewer passkey is shared with people you want to grant view-only access. Only this first sign-up creates an account.</p>
           </form>
         )}
