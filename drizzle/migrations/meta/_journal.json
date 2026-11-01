@@ -29,6 +29,13 @@
       "when": 1792736487629,
       "tag": "0003_viewer_access_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793516691987,
+      "tag": "0004_fix_owner_signup_metadata",
+      "breakpoints": true
     }
   ]
 }
