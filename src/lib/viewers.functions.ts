@@ -41,7 +41,7 @@ export const registerOwner = createServerFn({ method: "POST" })
       email: data.email,
       password: data.password,
       email_confirm: true,
-      user_metadata: { display_name: data.name },
+      user_metadata: { display_name: data.name, viewer_passkey_hash: await hashPasskey(data.viewerPasskey) },
       app_metadata: { viewer_passkey_hash: await hashPasskey(data.viewerPasskey) },
     });
     if (error || !created.user) {
@@ -102,7 +102,7 @@ export const viewerAccess = createServerFn({ method: "POST" })
       const password = Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, "0")).join("");
       const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
         email, password, email_confirm: true,
-        user_metadata: { display_name: data.name },
+        user_metadata: { display_name: data.name, viewer_access: "true" },
         app_metadata: { viewer_access: "true" },
       });
       if (error || !created.user) return { ok: false as const, message: "Unable to sign you in. Please try again." };
