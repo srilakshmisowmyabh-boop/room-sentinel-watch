@@ -31,7 +31,7 @@ export const viewerPasskeyStatus = createServerFn({ method: "GET" }).handler(asy
 // The very first sign-up creates the Owner and sets the shared viewer passkey.
 // After that, account creation is closed — viewers sign in with the passkey.
 export const registerOwner = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => ownerSignupSchema.parse(input))
+  .validator((input: unknown) => ownerSignupSchema.parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: state, error: stateError } = await supabaseAdmin.from("signup_state").select("owner_claimed").eq("id", 1).single();
@@ -65,7 +65,7 @@ export const registerOwner = createServerFn({ method: "POST" })
 // passkey hash server-side, enforces the guessing lockout, finds or creates the
 // viewer account and returns a one-time sign-in token for the browser.
 export const viewerAccess = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => viewerAccessSchema.parse(input))
+  .validator((input: unknown) => viewerAccessSchema.parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const email = data.email.toLowerCase();
@@ -168,7 +168,7 @@ export const listViewers = createServerFn({ method: "GET" }).middleware([require
 });
 
 export const setViewerBlocked = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ userId: z.string().uuid(), blocked: z.boolean() }).parse(input))
+  .validator((input: unknown) => z.object({ userId: z.string().uuid(), blocked: z.boolean() }).parse(input))
   .handler(async ({ data, context }) => {
     await requireOwner(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -187,7 +187,7 @@ export const setViewerBlocked = createServerFn({ method: "POST" }).middleware([r
   });
 
 export const setViewerPasskey = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ passkey: viewerPasskeySchema }).parse(input))
+  .validator((input: unknown) => z.object({ passkey: viewerPasskeySchema }).parse(input))
   .handler(async ({ data, context }) => {
     await requireOwner(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
