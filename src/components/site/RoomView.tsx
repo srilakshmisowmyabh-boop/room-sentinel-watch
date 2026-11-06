@@ -90,8 +90,9 @@ export function RoomView({ view = "room", compact = false }: { view?: "room" | "
 
         {/* Nodes */}
         {NODE_POS.map((p, i) => {
-          const n = nodes[i]!;
-          const ok = n?.online;
+          const n = nodes[i];
+          if (!n) return null;
+          const ok = n.online;
           return (
             <g key={i} onMouseEnter={() => setHover(n.id)} onMouseLeave={() => setHover(null)} className="cursor-pointer">
               <circle cx={p.x} cy={p.y} r="22" fill={ok ? "var(--cyan)" : "var(--danger)"} fillOpacity="0.15">
