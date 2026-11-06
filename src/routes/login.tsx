@@ -63,10 +63,15 @@ function Login() {
 
   useEffect(() => { if (g.authReady && g.signedIn) nav({ to: "/dashboard" }); }, [g.authReady, g.signedIn, nav]);
 
-  const signupReady =
-    name.trim().length > 0 && email.trim().length > 0 &&
-    pass.length >= 8 && pass2 === pass &&
-    passkey.trim().length >= 8 && passkey2.trim() === passkey.trim();
+  const signupHints: [boolean, string][] = [
+    [name.trim().length > 0, "Name entered"],
+    [/^\S+@\S+\.\S+$/.test(email.trim()), "Valid email"],
+    [pass.length >= 8, "Password has 8+ characters"],
+    [pass2.length > 0 && pass2 === pass, "Passwords match"],
+    [passkey.trim().length >= 8, "Viewer passkey has 8+ characters"],
+    [passkey2.trim().length > 0 && passkey2.trim() === passkey.trim(), "Passkeys match"],
+  ];
+  const signupReady = signupHints.every(([ok]) => ok);
 
   const onLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -122,7 +127,13 @@ function Login() {
     try {
       const result = await register({ data: parsed.data });
       if (!result.ok) { setErr(result.message); return; }
-      setFirstOwner(false); toast.success(result.message); setTab("login");
+      setFirstOwner(false);
+      // Sign the new Owner straight in so they land on the dashboard.
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: pass });
+      if (signInError) { toast.success(result.message); setTab("login"); return; }
+      recordSignIn().catch(() => undefined);
+      toast.success("Owner account created. Welcome!");
+      nav({ to: "/dashboard" });
     } catch { setErr("Unable to create account. Please try again."); }
     finally { setBusy(false); }
   };
@@ -141,6 +152,7 @@ function Login() {
             <DialogDescription>Choose how you want to continue.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
+            {firstOwner === null && <p className="text-center text-sm text-muted-foreground">Checking account status…</p>}
             {firstOwner && (
               <button type="button" onClick={() => { setTab("signup"); setErr(""); setForgot(false); setChooser(false); }} className="flex items-center justify-center gap-2 rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><UserPlus className="h-4 w-4" />First-time user? Create account</button>
             )}
@@ -184,6 +196,9 @@ function Login() {
             {err && <p className="text-sm text-danger">{err}</p>}
             <button disabled={busy} className="w-full rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow disabled:opacity-60">{busy ? "Signing in…" : "Sign in"}</button>
             <button type="button" onClick={() => { setForgot(true); setErr(""); }} className="w-full text-sm text-primary hover:underline">Forgot password?</button>
+            {firstOwner && (
+              <button type="button" onClick={() => { setTab("signup"); setErr(""); }} className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-2.5 text-sm font-semibold transition hover:bg-muted"><UserPlus className="h-4 w-4" />First-time user? Create account</button>
+            )}
           </form>
         )}
         {tab === "viewer" && (
@@ -211,6 +226,15 @@ function Login() {
               <input value={passkey2} onChange={(e) => setPasskey2(e.target.value)} type="password" className={input} autoComplete="off" maxLength={128} />
             </label>
             {err && <p className="text-sm text-danger">{err}</p>}
+            {!signupReady && (
+              <ul className="space-y-1 text-xs text-muted-foreground" aria-live="polite">
+                {signupHints.map(([ok, text]) => (
+                  <li key={text} className={cn("flex items-center gap-1.5", ok && "text-success")}>
+                    {ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5 text-danger" />}{text}
+                  </li>
+                ))}
+              </ul>
+            )}
             <button disabled={busy || !signupReady} className="w-full rounded-xl bg-brand py-3 font-semibold text-primary-foreground glow disabled:opacity-60">{busy ? "Creating…" : "Create Owner account"}</button>
             <p className="text-xs text-muted-foreground">The viewer passkey is shared with people you want to grant view-only access. Only this first sign-up creates an account.</p>
           </form>
