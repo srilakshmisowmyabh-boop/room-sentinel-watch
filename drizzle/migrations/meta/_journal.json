@@ -36,6 +36,13 @@
       "when": 1793516691987,
       "tag": "0004_fix_owner_signup_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795708052211,
+      "tag": "0005_account_isolation",
+      "breakpoints": true
     }
   ]
 }

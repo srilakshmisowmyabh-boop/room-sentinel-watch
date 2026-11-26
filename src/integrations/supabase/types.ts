@@ -14,8 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          account_id: string
+          created_at: string
+          owner_user_id: string | null
+          viewer_password_hash: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          owner_user_id?: string | null
+          viewer_password_hash?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          owner_user_id?: string | null
+          viewer_password_hash?: string | null
+        }
+        Relationships: []
+      }
       activity_log: {
         Row: {
+          account_id: string | null
           action: string
           actor_email: string
           actor_id: string | null
@@ -27,6 +49,7 @@ export type Database = {
           role: string
         }
         Insert: {
+          account_id?: string | null
           action: string
           actor_email?: string
           actor_id?: string | null
@@ -38,6 +61,7 @@ export type Database = {
           role?: string
         }
         Update: {
+          account_id?: string | null
           action?: string
           actor_email?: string
           actor_id?: string | null
@@ -48,10 +72,19 @@ export type Database = {
           old_value?: Json | null
           role?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["account_id"]
+          },
+        ]
       }
       alerts: {
         Row: {
+          account_id: string
           acknowledged: boolean
           acknowledged_by: string | null
           confidence: number | null
@@ -64,6 +97,7 @@ export type Database = {
           room: string | null
         }
         Insert: {
+          account_id: string
           acknowledged?: boolean
           acknowledged_by?: string | null
           confidence?: number | null
@@ -76,6 +110,7 @@ export type Database = {
           room?: string | null
         }
         Update: {
+          account_id?: string
           acknowledged?: boolean
           acknowledged_by?: string | null
           confidence?: number | null
@@ -88,6 +123,13 @@ export type Database = {
           room?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "alerts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["account_id"]
+          },
           {
             foreignKeyName: "alerts_device_id_fkey"
             columns: ["device_id"]
@@ -146,6 +188,7 @@ export type Database = {
       }
       devices: {
         Row: {
+          account_id: string
           created_at: string
           id: string
           last_seen: string | null
@@ -156,6 +199,7 @@ export type Database = {
           uptime_seconds: number
         }
         Insert: {
+          account_id: string
           created_at?: string
           id: string
           last_seen?: string | null
@@ -166,6 +210,7 @@ export type Database = {
           uptime_seconds?: number
         }
         Update: {
+          account_id?: string
           created_at?: string
           id?: string
           last_seen?: string | null
@@ -175,10 +220,57 @@ export type Database = {
           status?: string
           uptime_seconds?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "devices_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["account_id"]
+          },
+        ]
+      }
+      pending_viewer_logins: {
+        Row: {
+          account_id: string
+          consumed_at: string | null
+          created_at: string
+          display_name: string
+          expires_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          consumed_at?: string | null
+          created_at?: string
+          display_name: string
+          expires_at: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          consumed_at?: string | null
+          created_at?: string
+          display_name?: string
+          expires_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_viewer_logins_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["account_id"]
+          },
+        ]
       }
       presence_events: {
         Row: {
+          account_id: string
           confidence: number
           device_id: string
           id: string
@@ -189,6 +281,7 @@ export type Database = {
           ts: string
         }
         Insert: {
+          account_id: string
           confidence: number
           device_id: string
           id?: string
@@ -199,6 +292,7 @@ export type Database = {
           ts?: string
         }
         Update: {
+          account_id?: string
           confidence?: number
           device_id?: string
           id?: string
@@ -210,6 +304,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "presence_events_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["account_id"]
+          },
+          {
             foreignKeyName: "presence_events_device_id_fkey"
             columns: ["device_id"]
             isOneToOne: false
@@ -220,24 +321,39 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_id: string
           created_at: string
           display_name: string
+          email: string | null
           id: string
         }
         Insert: {
+          account_id: string
           created_at?: string
           display_name?: string
+          email?: string | null
           id: string
         }
         Update: {
+          account_id?: string
           created_at?: string
           display_name?: string
+          email?: string | null
           id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["account_id"]
+          },
+        ]
       }
       security_state: {
         Row: {
+          account_id: string
           entry_delay: number
           exit_delay: number
           id: number
@@ -246,6 +362,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          account_id: string
           entry_delay?: number
           exit_delay?: number
           id?: number
@@ -254,6 +371,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          account_id?: string
           entry_delay?: number
           exit_delay?: number
           id?: number
@@ -261,10 +379,19 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "security_state_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["account_id"]
+          },
+        ]
       }
       settings: {
         Row: {
+          account_id: string
           alarm_duration: number
           clear_time: number
           id: number
@@ -274,6 +401,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_id: string
           alarm_duration?: number
           clear_time?: number
           id?: number
@@ -283,6 +411,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_id?: string
           alarm_duration?: number
           clear_time?: number
           id?: number
@@ -291,7 +420,15 @@ export type Database = {
           threshold?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "settings_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["account_id"]
+          },
+        ]
       }
       signup_state: {
         Row: {
@@ -310,24 +447,35 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          account_id: string
           id: string
           revoked_at: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          account_id: string
           id?: string
           revoked_at?: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          account_id?: string
           id?: string
           revoked_at?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["account_id"]
+          },
+        ]
       }
       viewer_access: {
         Row: {
@@ -349,6 +497,7 @@ export type Database = {
       }
       viewer_accounts: {
         Row: {
+          account_id: string
           blocked_at: string | null
           current_session_id: string | null
           email: string
@@ -358,6 +507,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_id: string
           blocked_at?: string | null
           current_session_id?: string | null
           email: string
@@ -367,6 +517,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_id?: string
           blocked_at?: string | null
           current_session_id?: string | null
           email?: string
@@ -375,7 +526,15 @@ export type Database = {
           name?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "viewer_accounts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["account_id"]
+          },
+        ]
       }
       viewer_invites: {
         Row: {
@@ -422,6 +581,7 @@ export type Database = {
           is_owner: boolean
         }[]
       }
+      current_account_id: { Args: never; Returns: string }
       device_has_key: { Args: { _device_id: string }; Returns: boolean }
       has_role: {
         Args: {
